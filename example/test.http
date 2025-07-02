@@ -1,0 +1,5 @@
+### Ready probe
+GET http://localhost:6000/ready
+
+### Health probe
+GET http://localhost:6000/health
