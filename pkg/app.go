@@ -3,6 +3,9 @@ package pkg
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/oiime/logrusbun"
+	log "github.com/sirupsen/logrus"
+	"github.com/toorop/gin-logrus"
 	"github.com/uptrace/bun"
 	"net/http"
 	"os"
@@ -11,6 +14,8 @@ import (
 
 var isReady = &atomic.Value{}
 
+var App Application
+
 func init() {
 	isReady.Store(false)
 }
@@ -18,12 +23,18 @@ func init() {
 type Application struct {
 	Db     *bun.DB
 	Router *gin.Engine
+	Log    *log.Logger
 }
 
 func NewApplication() *Application {
+
+	dbConn := Db
+	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
+
 	return &Application{
-		Db:     Db,
-		Router: initRouter(),
+		Db:     dbConn,
+		Router: initRouter(Logger),
+		Log:    Logger,
 	}
 }
 
@@ -73,8 +84,9 @@ func HealthWith(db *bun.DB) gin.HandlerFunc {
 	}
 }
 
-func initRouter() *gin.Engine {
+func initRouter(logger *log.Logger) *gin.Engine {
 	r := gin.Default()
+	r.Use(ginlogrus.Logger(logger), gin.Recovery())
 
 	return r
 }

@@ -4,6 +4,9 @@ go 1.24.4
 
 require (
 	github.com/gin-gonic/gin v1.10.1
+	github.com/oiime/logrusbun v0.1.1
+	github.com/sirupsen/logrus v1.9.3
+	github.com/toorop/gin-logrus v0.0.0-20210225092905-2c785434f26f
 	github.com/uptrace/bun v1.2.14
 	github.com/uptrace/bun/dialect/pgdialect v1.2.14
 	github.com/uptrace/bun/driver/pgdriver v1.2.14
