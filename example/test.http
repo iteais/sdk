@@ -3,3 +3,6 @@ GET http://localhost:6000/ready
 
 ### Health probe
 GET http://localhost:6000/health
+
+### User by id
+GET http://localhost:6000/user/1?fields=email,id
