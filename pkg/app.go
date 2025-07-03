@@ -15,7 +15,6 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/migrate"
 	"github.com/xid/sdk/example/migrations"
-	"net/http"
 	"os"
 	"sync/atomic"
 )
@@ -81,16 +80,6 @@ func (a *Application) AppendMetrics() *Application {
 	return a
 }
 
-func ReadyProbe(isReady *atomic.Value) http.HandlerFunc {
-	return func(w http.ResponseWriter, _ *http.Request) {
-		if isReady == nil || !isReady.Load().(bool) {
-			http.Error(w, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	}
-}
-
 func (a *Application) AppendHealthProbe() *Application {
 	a.AppendGetEndpoint("/health", HealthProbe(a.Db))
 	return a
@@ -98,18 +87,6 @@ func (a *Application) AppendHealthProbe() *Application {
 
 func (a *Application) GetRequestLogger(c *gin.Context) *log.Entry {
 	return a.Log.WithField("traceId", c.MustGet("traceId"))
-}
-
-func HealthProbe(db *bun.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		_, err := db.Exec("SELECT 1 = 1")
-
-		if err != nil {
-			c.AbortWithStatus(http.StatusServiceUnavailable)
-		}
-
-		c.Writer.WriteHeader(http.StatusOK)
-	}
 }
 
 func initRouter(logger *log.Logger) *gin.Engine {
