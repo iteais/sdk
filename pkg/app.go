@@ -1,12 +1,18 @@
 package pkg
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/oiime/logrusbun"
 	log "github.com/sirupsen/logrus"
 	"github.com/toorop/gin-logrus"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/migrate"
+	"github.com/xid/sdk/example/migrations"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -14,7 +20,7 @@ import (
 
 var isReady = &atomic.Value{}
 
-var App Application
+var App *Application
 
 func init() {
 	isReady.Store(false)
@@ -28,14 +34,18 @@ type Application struct {
 
 func NewApplication() *Application {
 
-	dbConn := Db
+	Logger := log.New()
+
+	dbConn := initDb()
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
 
-	return &Application{
+	App = &Application{
 		Db:     dbConn,
 		Router: initRouter(Logger),
 		Log:    Logger,
 	}
+
+	return App
 }
 
 func (a Application) Run() {
@@ -89,4 +99,37 @@ func initRouter(logger *log.Logger) *gin.Engine {
 	r.Use(ginlogrus.Logger(logger), gin.Recovery())
 
 	return r
+}
+
+func initDb() *bun.DB {
+	dsn := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
+
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	db := bun.NewDB(sqldb, pgdialect.New())
+
+	ctx := context.Background()
+
+	m := migrate.NewMigrator(db, migrations.Migrations)
+	err := m.Init(ctx)
+	if err != nil {
+		panic(err)
+	}
+	group, err := m.Migrate(ctx)
+	//
+	if err != nil {
+		panic(err)
+	}
+
+	if group.IsZero() {
+		fmt.Printf("there are no new migrations to run (database is up to date)\n")
+	}
+
+	return db
 }
