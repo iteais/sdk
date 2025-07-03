@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/oiime/logrusbun"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
@@ -53,8 +54,7 @@ func NewApplication() *Application {
 func (a *Application) Run() {
 	fmt.Println("Application is running")
 
-	a.AppendReadyProbe()
-	a.AppendHealthProbe()
+	a.AppendReadyProbe().AppendHealthProbe().AppendMetrics()
 
 	done := make(chan bool)
 	go a.Router.Run(os.Getenv("HTTP_ADDR"))
@@ -74,6 +74,11 @@ func (a *Application) AppendSwagger(prefix string) *Application {
 
 func (a *Application) AppendReadyProbe() *Application {
 	a.AppendGetEndpoint("/ready", gin.WrapF(ReadyProbe(isReady)))
+	return a
+}
+
+func (a *Application) AppendMetrics() *Application {
+	a.Router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	return a
 }
 
