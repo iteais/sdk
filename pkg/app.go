@@ -32,11 +32,11 @@ type Application struct {
 	Log    *log.Logger
 }
 
-func NewApplication(migrations *migrate.Migrations) *Application {
+func NewApplication(dbSchema string, migrations *migrate.Migrations) *Application {
 
 	Logger := log.New()
 
-	dbConn := initDb(migrations)
+	dbConn := initDb(dbSchema, migrations)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
 
 	App = &Application{
@@ -98,7 +98,7 @@ func initRouter(logger *log.Logger) *gin.Engine {
 	return r
 }
 
-func initDb(migrations *migrate.Migrations) *bun.DB {
+func initDb(dbSchema string, migrations *migrate.Migrations) *bun.DB {
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
@@ -113,7 +113,20 @@ func initDb(migrations *migrate.Migrations) *bun.DB {
 
 	ctx := context.Background()
 
-	m := migrate.NewMigrator(db, migrations)
+	opt := migrate.WithTableName(dbSchema + "migrations")
+
+	m := migrate.NewMigrator(db, migrations, opt)
+
+	//m = &migrate.Migrator{
+	//	db:         db,
+	//	migrations: migrations,
+	//
+	//	ms: migrations.ms,
+	//
+	//	table:      defaultTable,
+	//	locksTable: defaultLocksTable,
+	//}
+
 	err := m.Init(ctx)
 	if err != nil {
 		panic(err)

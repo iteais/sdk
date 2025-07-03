@@ -23,7 +23,7 @@ import (
 // @BasePath  /
 func main() {
 
-	app := pkg.NewApplication(migrations.Migrations)
+	app := pkg.NewApplication("api", migrations.Migrations)
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
 		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
 		AppendSwagger("").
