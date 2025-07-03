@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/xid/sdk/example/controllers"
-	_ "github.com/xid/sdk/example/docs"
-	_ "github.com/xid/sdk/example/migrations"
-	"github.com/xid/sdk/pkg"
+	"github.com/iteais/sdk/example/controllers"
+	_ "github.com/iteais/sdk/example/docs"
+	_ "github.com/iteais/sdk/example/migrations"
+	"github.com/iteais/sdk/pkg"
 )
 
 // @title           API микросервиса

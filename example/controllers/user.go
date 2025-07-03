@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
-	"github.com/xid/sdk/example/models"
-	"github.com/xid/sdk/pkg"
+	"github.com/iteais/sdk/example/models"
+	"github.com/iteais/sdk/pkg"
 	"io"
 )
 

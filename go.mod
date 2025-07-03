@@ -1,4 +1,4 @@
-module github.com/xid/sdk
+module github.com/iteais/sdk
 
 go 1.24.4
 

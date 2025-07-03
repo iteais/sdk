@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/xid/sdk/pkg"
+	"github.com/iteais/sdk/pkg"
 )
 
 func main() {

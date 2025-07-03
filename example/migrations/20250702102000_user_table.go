@@ -3,8 +3,8 @@ package migrations
 import (
 	"context"
 	"fmt"
+	"github.com/iteais/sdk/example/models"
 	"github.com/uptrace/bun"
-	"github.com/xid/sdk/example/models"
 )
 
 func init() {
