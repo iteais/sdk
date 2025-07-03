@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/iteais/sdk/example/migrations"
 	"github.com/oiime/logrusbun"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -33,11 +32,11 @@ type Application struct {
 	Log    *log.Logger
 }
 
-func NewApplication() *Application {
+func NewApplication(migrations *migrate.Migrations) *Application {
 
 	Logger := log.New()
 
-	dbConn := initDb()
+	dbConn := initDb(migrations)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
 
 	App = &Application{
@@ -99,7 +98,7 @@ func initRouter(logger *log.Logger) *gin.Engine {
 	return r
 }
 
-func initDb() *bun.DB {
+func initDb(migrations *migrate.Migrations) *bun.DB {
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
@@ -114,7 +113,7 @@ func initDb() *bun.DB {
 
 	ctx := context.Background()
 
-	m := migrate.NewMigrator(db, migrations.Migrations)
+	m := migrate.NewMigrator(db, migrations)
 	err := m.Init(ctx)
 	if err != nil {
 		panic(err)

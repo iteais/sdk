@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/iteais/sdk/example/controllers"
 	_ "github.com/iteais/sdk/example/docs"
+	"github.com/iteais/sdk/example/migrations"
 	_ "github.com/iteais/sdk/example/migrations"
 	"github.com/iteais/sdk/pkg"
 )
@@ -22,7 +23,7 @@ import (
 // @BasePath  /
 func main() {
 
-	app := pkg.NewApplication()
+	app := pkg.NewApplication(migrations.Migrations)
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
 		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
 		AppendSwagger("").
