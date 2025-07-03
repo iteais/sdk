@@ -50,7 +50,7 @@ func NewApplication() *Application {
 	return App
 }
 
-func (a Application) Run() {
+func (a *Application) Run() {
 	fmt.Println("Application is running")
 
 	a.AppendReadyProbe()
@@ -62,16 +62,19 @@ func (a Application) Run() {
 	<-done
 }
 
-func (a Application) AppendGetEndpoint(route string, handler gin.HandlerFunc) {
+func (a *Application) AppendGetEndpoint(route string, handler gin.HandlerFunc) *Application {
 	a.Router.GET(route, handler)
+	return a
 }
 
-func (a Application) AppendSwagger(prefix string) {
+func (a *Application) AppendSwagger(prefix string) *Application {
 	a.Router.GET(prefix+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	return a
 }
 
-func (a Application) AppendReadyProbe() {
+func (a *Application) AppendReadyProbe() *Application {
 	a.AppendGetEndpoint("/ready", gin.WrapF(ReadyProbe(isReady)))
+	return a
 }
 
 func ReadyProbe(isReady *atomic.Value) http.HandlerFunc {
@@ -84,11 +87,12 @@ func ReadyProbe(isReady *atomic.Value) http.HandlerFunc {
 	}
 }
 
-func (a Application) AppendHealthProbe() {
-	a.AppendGetEndpoint("/health", HealthWith(a.Db))
+func (a *Application) AppendHealthProbe() *Application {
+	a.AppendGetEndpoint("/health", HealthProbe(a.Db))
+	return a
 }
 
-func HealthWith(db *bun.DB) gin.HandlerFunc {
+func HealthProbe(db *bun.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, err := db.Exec("SELECT 1 = 1")
 
@@ -102,7 +106,9 @@ func HealthWith(db *bun.DB) gin.HandlerFunc {
 
 func initRouter(logger *log.Logger) *gin.Engine {
 	r := gin.Default()
-	r.Use(ginlogrus.Logger(logger), gin.Recovery())
+	r.Use(ginlogrus.Logger(logger), gin.Recovery()).
+		Use(JsonMiddleware()).
+		Use(CorsMiddleware())
 
 	return r
 }

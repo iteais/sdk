@@ -23,8 +23,7 @@ import (
 func main() {
 
 	app := pkg.NewApplication()
-	app.AppendGetEndpoint("/user/:id", controllers.GetById())
-	app.AppendSwagger("")
-	app.Run()
-
+	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
+		AppendSwagger("").
+		Run()
 }
