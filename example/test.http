@@ -9,3 +9,6 @@ GET http://localhost:8800/user/1?fields=email,id
 
 ### swagger
 GET http://localhost:8800/swagger/index.html
+
+### Proxy
+GET http://localhost:8800/user/proxy

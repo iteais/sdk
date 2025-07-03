@@ -69,7 +69,7 @@ func HttpLogger(logger logrus.FieldLogger, notLogged ...string) gin.HandlerFunc 
 			"referer":    referer,
 			"dataLength": dataLength,
 			"userAgent":  clientUserAgent,
-			"traceId":    c.MustGet("traceId"),
+			"traceId":    c.GetString(traceIdContextKey),
 		})
 
 		if len(c.Errors) > 0 {

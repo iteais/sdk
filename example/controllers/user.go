@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/render"
 	"github.com/xid/sdk/example/models"
 	"github.com/xid/sdk/pkg"
+	"io"
 )
 
 // GetById godoc
@@ -35,5 +38,22 @@ func GetById() gin.HandlerFunc {
 		err := query.Scan(c)
 		pkg.App.GetRequestLogger(c).Info("some else msg")
 		c.JSON(200, gin.H{"data": user, "error": err})
+	}
+}
+
+// Proxy Internal request example
+func Proxy() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		pkg.App.GetRequestLogger(c).Info("Proxy")
+
+		resp := pkg.NewHttpClientFromContext("GET", "http://localhost:8800/user/1", "", c)
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Error reading response body:", err)
+			return
+		}
+
+		c.Render(resp.StatusCode, render.Data{Data: body})
 	}
 }

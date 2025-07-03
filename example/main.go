@@ -24,6 +24,7 @@ func main() {
 
 	app := pkg.NewApplication()
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
+		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
 		AppendSwagger("").
 		Run()
 }

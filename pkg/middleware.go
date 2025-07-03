@@ -5,6 +5,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	traceIdContextKey = "traceId"
+	traceIdHttpHeader = "X-Trace-Id"
+)
+
 func CorsMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -31,13 +36,13 @@ func JsonMiddleware() gin.HandlerFunc {
 func TraceMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		tid := c.GetHeader("X-Trace-Id")
+		tid := c.GetHeader(traceIdHttpHeader)
 
 		if tid == "" {
 			tid = uuid.New().String()
 		}
 
-		c.Set("traceId", tid)
+		c.Set(traceIdContextKey, tid)
 
 		c.Next()
 	}
