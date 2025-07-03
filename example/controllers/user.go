@@ -6,6 +6,15 @@ import (
 	"github.com/xid/sdk/pkg"
 )
 
+// GetById godoc
+// @Summary      Get user by id
+// @Description  Get user by id
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "user id"
+// @Success      200  {object}  models.User
+// @Router       /user/{id} [get]
 func GetById() gin.HandlerFunc {
 	return func(c *gin.Context) {
 

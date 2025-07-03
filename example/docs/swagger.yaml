@@ -1,0 +1,50 @@
+basePath: /
+definitions:
+  models.User:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      first_name:
+        example: John Doe
+        type: string
+      id:
+        description: Идентификатор пользователя
+        example: 1
+        type: integer
+    type: object
+host: api.some-host.id
+info:
+  contact:
+    email: fedor@support-pc.org
+    name: API Support
+  description: API микросервиса.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://some-host.id
+  title: API микросервиса
+  version: 0.0.1
+paths:
+  /user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get user by id
+      parameters:
+      - description: user id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Get user by id
+      tags:
+      - user
+swagger: "2.0"

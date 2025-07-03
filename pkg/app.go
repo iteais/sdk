@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oiime/logrusbun"
 	log "github.com/sirupsen/logrus"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 	"github.com/toorop/gin-logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -62,6 +64,10 @@ func (a Application) Run() {
 
 func (a Application) AppendGetEndpoint(route string, handler gin.HandlerFunc) {
 	a.Router.GET(route, handler)
+}
+
+func (a Application) AppendSwagger(prefix string) {
+	a.Router.GET(prefix+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
 
 func (a Application) AppendReadyProbe() {

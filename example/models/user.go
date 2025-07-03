@@ -6,11 +6,13 @@ import (
 )
 
 type User struct {
-	bun.BaseModel `bun:"table:users.user,alias:u"`
+	bun.BaseModel `bun:"table:users.user,alias:u" swaggerignore:"true"`
 
-	ID        int64  `bun:"id,pk,autoincrement" json:"id"`
-	Email     string `bun:"email,notnull" json:"email"`
-	FirstName string `bun:"first_name,nullzero" json:"first_name"`
+	// Идентификатор пользователя
+	ID int64 `bun:"id,pk,autoincrement" json:"id" example:"1"`
+	// Почта пользователя
+	Email     string `bun:"email,notnull" json:"email" example:"user@example.com"`
+	FirstName string `bun:"first_name,nullzero" json:"first_name" example:"John Doe"`
 
 	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`

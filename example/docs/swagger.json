@@ -1,0 +1,73 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API микросервиса.",
+        "title": "API микросервиса",
+        "termsOfService": "https://some-host.id",
+        "contact": {
+            "name": "API Support",
+            "email": "fedor@support-pc.org"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "0.0.1"
+    },
+    "host": "api.some-host.id",
+    "basePath": "/",
+    "paths": {
+        "/user/{id}": {
+            "get": {
+                "description": "Get user by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "user id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "first_name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "id": {
+                    "description": "Идентификатор пользователя",
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        }
+    }
+}
