@@ -1,6 +1,9 @@
 package pkg
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
 
 func CorsMiddleware() func(c *gin.Context) {
 	return func(c *gin.Context) {
@@ -21,6 +24,21 @@ func CorsMiddleware() func(c *gin.Context) {
 func JsonMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Next()
+	}
+}
+
+func TraceMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		tid := c.GetHeader("X-Trace-Id")
+
+		if tid == "" {
+			tid = uuid.New().String()
+		}
+
+		c.Set("traceId", tid)
+
 		c.Next()
 	}
 }

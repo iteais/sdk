@@ -10,7 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
-	"github.com/toorop/gin-logrus"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -97,6 +96,10 @@ func (a *Application) AppendHealthProbe() *Application {
 	return a
 }
 
+func (a *Application) GetRequestLogger(c *gin.Context) *log.Entry {
+	return a.Log.WithField("traceId", c.MustGet("traceId"))
+}
+
 func HealthProbe(db *bun.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		_, err := db.Exec("SELECT 1 = 1")
@@ -111,7 +114,8 @@ func HealthProbe(db *bun.DB) gin.HandlerFunc {
 
 func initRouter(logger *log.Logger) *gin.Engine {
 	r := gin.Default()
-	r.Use(ginlogrus.Logger(logger), gin.Recovery()).
+	r.Use(TraceMiddleware()).
+		Use(HttpLogger(logger), gin.Recovery()).
 		Use(JsonMiddleware()).
 		Use(CorsMiddleware())
 

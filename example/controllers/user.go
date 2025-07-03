@@ -30,9 +30,10 @@ func GetById() gin.HandlerFunc {
 			query = query.ColumnExpr(fields)
 		}
 
-		pkg.App.Log.Info(query.String())
+		pkg.App.GetRequestLogger(c).Info(query.String())
 
 		err := query.Scan(c)
+		pkg.App.GetRequestLogger(c).Info("some else msg")
 		c.JSON(200, gin.H{"data": user, "error": err})
 	}
 }
