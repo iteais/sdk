@@ -74,6 +74,36 @@ func (a *Application) AppendGetEndpoint(route string, handler gin.HandlerFunc) *
 	return a
 }
 
+func (a *Application) AppendPostEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.POST(route, handler)
+	return a
+}
+
+func (a *Application) AppendPutEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.PUT(route, handler)
+	return a
+}
+
+func (a *Application) AppendDeleteEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.DELETE(route, handler)
+	return a
+}
+
+func (a *Application) AppendPatchEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.PATCH(route, handler)
+	return a
+}
+
+func (a *Application) AppendHeadEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.HEAD(route, handler)
+	return a
+}
+
+func (a *Application) AppendOptionsEndpoint(route string, handler gin.HandlerFunc) *Application {
+	a.Router.OPTIONS(route, handler)
+	return a
+}
+
 func (a *Application) AppendSwagger(prefix string) *Application {
 	a.Router.GET(prefix+"/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return a
