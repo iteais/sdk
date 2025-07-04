@@ -113,6 +113,7 @@ func initDb(dbSchema string, migrations *migrate.Migrations) *bun.DB {
 
 	ctx := context.Background()
 
+	db.Exec("CREATE SCHEMA IF NOT EXISTS " + dbSchema + ";")
 	tableName := migrate.WithTableName(dbSchema + ".migration")
 	lockTableName := migrate.WithLocksTableName(dbSchema + ".migration_lock")
 
