@@ -1,10 +1,12 @@
 package pkg
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/oiime/logrusbun"
@@ -33,12 +35,17 @@ type Application struct {
 	Log    *log.Logger
 }
 
-func NewApplication() *Application {
+type ApplicationConfig struct {
+	MigrationPath string
+	DbSchemaName  string
+}
+
+func NewApplication(config ApplicationConfig) *Application {
 
 	Logger := log.New()
 
 	dbConn := initDb()
-	dbMigrate("scripts/migrations")
+	dbMigrate(config.MigrationPath, config.DbSchemaName)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
 
 	App = &Application{
@@ -119,10 +126,18 @@ func initDb() *bun.DB {
 	return db
 }
 
-func dbMigrate(path string) {
-	m, err := migrate.New(
+func dbMigrate(path string, schemaName string) {
+
+	dsn := getDbDsn()
+
+	db, err := sql.Open("postgres", dsn)
+	conn, err := db.Conn(context.Background())
+	driver, err := postgres.WithConnection(context.Background(), conn, &postgres.Config{MigrationsTable: "migrations", SchemaName: schemaName})
+
+	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+path,
-		getDbDsn(),
+		"postgres",
+		driver,
 	)
 
 	if err != nil {
