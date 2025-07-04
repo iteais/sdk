@@ -11,8 +11,8 @@ type User struct {
 	// Идентификатор пользователя
 	ID int64 `bun:"id,pk,autoincrement" json:"id" example:"1"`
 	// Почта пользователя
-	Email     string `bun:"email,notnull" json:"email" example:"user@example.com"`
-	FirstName string `bun:"first_name,nullzero" json:"first_name" example:"John Doe"`
+	Email     string `bun:"email,notnull" json:"email" example:"user@example.com" binding:"required,email"`
+	FirstName string `bun:"first_name,nullzero" json:"first_name" example:"John Doe" binding:"required,min=12,max=255"`
 
 	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"-"`
 	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"-"`
