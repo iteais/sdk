@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-migrate/migrate/v4"
@@ -145,7 +146,7 @@ func dbMigrate(path string, schemaName string) {
 	}
 
 	err = m.Up() // run your migrations and handle the errors above of course
-	if err != nil {
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		panic(err)
 	}
 
