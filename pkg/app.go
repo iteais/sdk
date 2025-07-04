@@ -113,19 +113,10 @@ func initDb(dbSchema string, migrations *migrate.Migrations) *bun.DB {
 
 	ctx := context.Background()
 
-	opt := migrate.WithTableName(dbSchema + "migrations")
+	tableName := migrate.WithTableName(dbSchema + ".migration")
+	lockTableName := migrate.WithLocksTableName(dbSchema + ".migration_lock")
 
-	m := migrate.NewMigrator(db, migrations, opt)
-
-	//m = &migrate.Migrator{
-	//	db:         db,
-	//	migrations: migrations,
-	//
-	//	ms: migrations.ms,
-	//
-	//	table:      defaultTable,
-	//	locksTable: defaultLocksTable,
-	//}
+	m := migrate.NewMigrator(db, migrations, tableName, lockTableName)
 
 	err := m.Init(ctx)
 	if err != nil {
