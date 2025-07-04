@@ -1,10 +1,10 @@
 package pkg
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/oiime/logrusbun"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -13,7 +13,6 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
-	"github.com/uptrace/bun/migrate"
 	"os"
 	"sync/atomic"
 )
@@ -32,11 +31,12 @@ type Application struct {
 	Log    *log.Logger
 }
 
-func NewApplication(dbSchema string, migrations *migrate.Migrations) *Application {
+func NewApplication() *Application {
 
 	Logger := log.New()
 
-	dbConn := initDb(dbSchema, migrations)
+	dbConn := initDb()
+	dbMigrate("scripts/migrations")
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
 
 	App = &Application{
@@ -98,8 +98,8 @@ func initRouter(logger *log.Logger) *gin.Engine {
 	return r
 }
 
-func initDb(dbSchema string, migrations *migrate.Migrations) *bun.DB {
-	dsn := fmt.Sprintf(
+func getDbDsn() string {
+	return fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -107,31 +107,29 @@ func initDb(dbSchema string, migrations *migrate.Migrations) *bun.DB {
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
 	)
+}
+
+func initDb() *bun.DB {
+	dsn := getDbDsn()
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
-
-	ctx := context.Background()
-
-	db.Exec("CREATE SCHEMA IF NOT EXISTS " + dbSchema + ";")
-	tableName := migrate.WithTableName(dbSchema + ".migration")
-	lockTableName := migrate.WithLocksTableName(dbSchema + ".migration_lock")
-
-	m := migrate.NewMigrator(db, migrations, tableName, lockTableName)
-
-	err := m.Init(ctx)
-	if err != nil {
-		panic(err)
-	}
-	group, err := m.Migrate(ctx)
-	//
-	if err != nil {
-		panic(err)
-	}
-
-	if group.IsZero() {
-		fmt.Printf("there are no new migrations to run (database is up to date)\n")
-	}
-
 	return db
+}
+
+func dbMigrate(path string) {
+	m, err := migrate.New(
+		"file://"+path,
+		getDbDsn(),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = m.Up() // run your migrations and handle the errors above of course
+	if err != nil {
+		panic(err)
+	}
+
 }
