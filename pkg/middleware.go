@@ -1,8 +1,14 @@
 package pkg
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"io"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
 )
 
 const (
@@ -43,6 +49,75 @@ func TraceMiddleware() gin.HandlerFunc {
 		}
 
 		c.Set(traceIdContextKey, tid)
+
+		c.Next()
+	}
+}
+
+// HmacMiddleware Проверка подписи запроса
+func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		wl := append([]string{MetricsEndpoint, HealthEndpoint, ReadyEndpoint}, whiteList...)
+
+		for _, s := range wl {
+			if ok, _ := regexp.MatchString(s, c.Request.URL.Path); ok {
+				c.Next()
+				return
+			}
+		}
+
+		key := c.Request.Header.Get("Api-Key")
+		Sign := c.Request.Header.Get("Api-Sign")
+		Time := c.Request.Header.Get("Api-Time")
+
+		if key == "" || Sign == "" || Time == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api-Key or Api-Sign or Api-Time is empty"})
+			return
+		}
+
+		resp := NewHttpClientFromContext("GET", checkHost+"/api/by-key/"+key, "", c)
+
+		if resp == nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Cant call api service"})
+			return
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			// TODO: may be 403 or 401
+			c.AbortWithStatusJSON(resp.StatusCode, gin.H{"message": "Api service return status code: " + strconv.Itoa(resp.StatusCode)})
+			return
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			// TODO: may be 400
+			c.AbortWithStatusJSON(resp.StatusCode, gin.H{"message": "Api service read response body error: " + err.Error()})
+			return
+		}
+
+		var account ApiAccount
+		err = json.Unmarshal(body, &account)
+		if err != nil {
+			// TODO: may be 400
+			c.AbortWithStatusJSON(resp.StatusCode, gin.H{"message": "Api service unmarshal response body error: " + err.Error()})
+			return
+		}
+
+		now := time.Now()
+		unixTimestampSeconds, err := strconv.ParseInt(Time, 10, 64)
+		requestTime := time.Unix(unixTimestampSeconds, 0)
+
+		if now.Add(-2 * time.Minute).Before(requestTime) {
+			msg := map[string]string{"message": "Request has incorrect signature"}
+			c.AbortWithStatusJSON(419, msg)
+			return
+		}
+
+		if account.CanHandeWithHash(Sign, Time) == false {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api service not approve request"})
+			return
+		}
 
 		c.Next()
 	}

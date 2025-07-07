@@ -22,11 +22,15 @@ import (
 func main() {
 
 	config := pkg.ApplicationConfig{
-		MigrationPath: "scripts/migrations",
+		MigrationPath: "example/scripts/migrations",
 		DbSchemaName:  "users",
+		WhiteList:     []string{"/swagger/index.html"},
 	}
 
 	app := pkg.NewApplication(config)
+
+	app.Router.Use(pkg.HmacMiddleware("http://localhost:8801", config.WhiteList...))
+
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
 		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
 		AppendSwagger("").

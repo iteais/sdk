@@ -6,6 +6,9 @@ GET http://localhost:8800/health
 
 ### User by id
 GET http://localhost:8800/user/1?fields=email,id
+Api-Key: abc
+Api-Sign: 456
+Api-Time: 456
 
 ### swagger
 GET http://localhost:8800/swagger/index.html

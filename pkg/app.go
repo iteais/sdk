@@ -15,6 +15,12 @@ import (
 	"sync/atomic"
 )
 
+const (
+	HealthEndpoint  = "/health"
+	MetricsEndpoint = "/metrics"
+	ReadyEndpoint   = "/ready"
+)
+
 var isReady = &atomic.Value{}
 
 var App *Application
@@ -32,6 +38,7 @@ type Application struct {
 type ApplicationConfig struct {
 	MigrationPath string
 	DbSchemaName  string
+	WhiteList     []string
 }
 
 func NewApplication(config ApplicationConfig) *Application {
@@ -103,17 +110,17 @@ func (a *Application) AppendSwagger(prefix string) *Application {
 }
 
 func (a *Application) AppendReadyProbe() *Application {
-	a.AppendGetEndpoint("/ready", gin.WrapF(ReadyProbe(isReady)))
+	a.AppendGetEndpoint(ReadyEndpoint, gin.WrapF(ReadyProbe(isReady)))
 	return a
 }
 
 func (a *Application) AppendMetrics() *Application {
-	a.Router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	a.Router.GET(MetricsEndpoint, gin.WrapH(promhttp.Handler()))
 	return a
 }
 
 func (a *Application) AppendHealthProbe() *Application {
-	a.AppendGetEndpoint("/health", HealthProbe(a.Db))
+	a.AppendGetEndpoint(HealthEndpoint, HealthProbe(a.Db))
 	return a
 }
 
