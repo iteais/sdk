@@ -12,6 +12,7 @@ import (
 	"github.com/swaggo/gin-swagger"
 	"github.com/uptrace/bun"
 	"os"
+	"strings"
 	"sync/atomic"
 )
 
@@ -43,16 +44,20 @@ type ApplicationConfig struct {
 
 func NewApplication(config ApplicationConfig) *Application {
 
-	Logger := log.New()
+	logger := log.New()
+	if strings.ToUpper(os.Getenv("ENVIRONMENT")) != "DEV" {
+		logger.Formatter = &log.JSONFormatter{}
+	}
+	log.SetOutput(logger.Writer())
 
 	dbConn := initDb()
 	dbMigrate(config.MigrationPath, config.DbSchemaName)
-	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: Logger}))
+	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
 	App = &Application{
 		Db:     dbConn,
-		Router: initRouter(Logger),
-		Log:    Logger,
+		Router: initRouter(logger),
+		Log:    logger,
 	}
 
 	return App
