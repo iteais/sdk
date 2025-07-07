@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	traceIdContextKey = "traceId"
-	traceIdHttpHeader = "X-Trace-Id"
+	TraceIdContextKey = "traceId"
+	TraceIdHttpHeader = "X-Trace-Id"
 )
 
 func CorsMiddleware() func(c *gin.Context) {
@@ -42,13 +42,13 @@ func JsonMiddleware() gin.HandlerFunc {
 func TraceMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		tid := c.GetHeader(traceIdHttpHeader)
+		tid := c.GetHeader(TraceIdHttpHeader)
 
 		if tid == "" {
 			tid = uuid.New().String()
 		}
 
-		c.Set(traceIdContextKey, tid)
+		c.Set(TraceIdContextKey, tid)
 
 		c.Next()
 	}
@@ -76,7 +76,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			return
 		}
 
-		resp := NewHttpClientFromContext("GET", checkHost+"/api/by-key/"+key, "", c)
+		resp := NewInternalHttpClient("GET", checkHost+"/api/by-key/"+key, "", c.GetString(TraceIdContextKey))
 
 		if resp == nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Cant call api service"})

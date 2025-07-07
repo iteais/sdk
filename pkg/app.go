@@ -125,7 +125,7 @@ func (a *Application) AppendHealthProbe() *Application {
 }
 
 func (a *Application) GetRequestLogger(c *gin.Context) *log.Entry {
-	return a.Log.WithField(traceIdContextKey, c.GetString(traceIdContextKey))
+	return a.Log.WithField(TraceIdContextKey, c.GetString(TraceIdContextKey))
 }
 
 func initRouter(logger *log.Logger) *gin.Engine {

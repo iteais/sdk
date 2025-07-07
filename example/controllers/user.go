@@ -46,7 +46,7 @@ func Proxy() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		pkg.App.GetRequestLogger(c).Info("Proxy")
 
-		resp := pkg.NewHttpClientFromContext("GET", "http://localhost:8800/user/1", "", c)
+		resp := pkg.NewInternalHttpClient("GET", "http://localhost:8800/user/1", "", c.GetString(pkg.TraceIdContextKey))
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
