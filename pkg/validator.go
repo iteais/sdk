@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+type HttpError struct {
+	Error string `json:"error"`
+}
+
 func getErrorMsg(fe validator.FieldError, messages map[string]string) string {
 
 	if _, ok := messages[fe.Tag()]; ok {
