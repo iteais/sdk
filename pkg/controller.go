@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func ListAction(models []interface{}) func(c *gin.Context) {
+func ListAction(models interface{}) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		perPageParam := c.DefaultQuery("per-page", "20")
