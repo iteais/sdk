@@ -20,7 +20,7 @@ func ListAction(models interface{}) func(c *gin.Context) {
 		page, _ := strconv.Atoi(pageParam)
 
 		query := App.Db.NewSelect().
-			Model(&models).
+			Model(models).
 			Limit(perPage).
 			Offset((page - 1) * perPage)
 
