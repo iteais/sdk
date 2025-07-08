@@ -25,7 +25,7 @@ func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]
 		}
 	}
 
-	if m, ok := interface{}(model).(ModelAfterLoad); ok {
+	if m, ok := any(model).(ModelAfterLoad); ok {
 		m.AfterLoad()
 	}
 
