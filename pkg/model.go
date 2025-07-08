@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"reflect"
 )
 
 type ModelAfterLoad interface {
@@ -25,8 +26,11 @@ func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]
 		}
 	}
 
-	if m, ok := any(model).(ModelAfterLoad); ok {
-		m.AfterLoad()
+	value := reflect.ValueOf(model)
+	modelType := reflect.Indirect(value).Type()
+	modelValue := reflect.New(modelType)
+	if afterLoadModel, ok := modelValue.Interface().(ModelAfterLoad); ok {
+		afterLoadModel.AfterLoad()
 	}
 
 	return model, nil
