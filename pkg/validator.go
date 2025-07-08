@@ -1,8 +1,6 @@
 package pkg
 
 import (
-	"errors"
-	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"strings"
 )
@@ -26,22 +24,4 @@ func getErrorMsg(fe validator.FieldError, messages map[string]string) string {
 		return "Should be greater than " + fe.Param()
 	}
 	return fe.Error()
-}
-
-func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]string) (T, map[string][]string) {
-	if err := c.ShouldBindJSON(&model); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-
-			out := make(map[string][]string, len(ve))
-
-			for _, field := range ve {
-				out[field.Field()] = append(out[field.Field()], getErrorMsg(field, errorMessages))
-			}
-
-			return model, out
-		}
-	}
-
-	return model, nil
 }
