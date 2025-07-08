@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/iteais/sdk/example/controllers"
 	_ "github.com/iteais/sdk/example/docs"
+	"github.com/iteais/sdk/example/models"
 	"github.com/iteais/sdk/pkg"
 )
 
@@ -33,6 +34,7 @@ func main() {
 
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
 		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
+		AppendGetEndpoint("/user/list", pkg.ListAction[models.User]()).
 		AppendSwagger("").
 		Run()
 }

@@ -10,8 +10,10 @@ import (
 	"strings"
 )
 
-func ListAction(models interface{}) func(c *gin.Context) {
+func ListAction[T interface{}]() func(c *gin.Context) {
 	return func(c *gin.Context) {
+
+		var models []T
 
 		perPageParam := c.DefaultQuery("per-page", "20")
 		perPage, _ := strconv.Atoi(perPageParam)
