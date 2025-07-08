@@ -15,18 +15,21 @@ type ApiAccount struct {
 	Comment     string `json:"comment"`
 }
 
-func (a ApiAccount) CanHandeWithHash(hash string, time string) bool {
+// CanHandleWithHash verifies if the provided hash matches the expected hash for the given time.
+// Returns true if the hash matches, false otherwise.
+func (a ApiAccount) CanHandleWithHash(hash string, time string) bool {
+	if a.Block {
+		return false
+	}
 	return hash == a.GetHash(time)
 }
 
+// GetHash generates a SHA-256 hash based on the account's key, secret, and the provided time.
+// The hash is generated from the concatenation of key + time + secret.
 func (a ApiAccount) GetHash(time string) string {
 	hasher := sha256.New()
 	data := []byte(a.Key + time + a.Secret)
 	hasher.Write(data)
 
-	// Get the hash sum as a byte slice
-	hashBytes := hasher.Sum(nil)
-
-	// Convert the hash bytes to a hexadecimal string
-	return hex.EncodeToString(hashBytes)
+	return hex.EncodeToString(hasher.Sum(nil))
 }

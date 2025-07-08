@@ -114,7 +114,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			return
 		}
 
-		if account.CanHandeWithHash(Sign, Time) == false {
+		if account.CanHandleWithHash(Sign, Time) == false {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api service not approve request"})
 			return
 		}
