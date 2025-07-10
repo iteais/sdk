@@ -13,7 +13,7 @@ import (
 func ListAction[T interface{}]() func(c *gin.Context) {
 	return func(c *gin.Context) {
 
-		var models []T
+		modelsArray := make([]T, 0)
 
 		perPageParam := c.DefaultQuery("per-page", "20")
 		perPage, _ := strconv.Atoi(perPageParam)
@@ -22,7 +22,7 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 		page, _ := strconv.Atoi(pageParam)
 
 		query := App.Db.NewSelect().
-			Model(models).
+			Model(&modelsArray).
 			Limit(perPage).
 			Offset((page - 1) * perPage)
 
@@ -47,7 +47,7 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 		count, err := query.ScanAndCount(context.Background())
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -76,6 +76,6 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 		//x-pagination-current-page
 		c.Header("x-pagination-current-page", fmt.Sprintf("%d", xpcp))
 
-		c.JSON(200, gin.H{"data": models})
+		c.JSON(200, gin.H{"data": modelsArray})
 	}
 }
