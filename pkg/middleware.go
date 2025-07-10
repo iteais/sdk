@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
@@ -54,6 +55,12 @@ func TraceMiddleware() gin.HandlerFunc {
 	}
 }
 
+type hmacResponse struct {
+	Cnt   int
+	Data  ApiAccount
+	Error string
+}
+
 // HmacMiddleware Проверка подписи запроса
 func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -96,7 +103,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			return
 		}
 
-		var account ApiAccount
+		var account hmacResponse
 		err = json.Unmarshal(body, &account)
 		if err != nil {
 			// TODO: may be 400
@@ -105,20 +112,44 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 		}
 
 		now := time.Now()
-		unixTimestampSeconds, err := strconv.ParseInt(Time, 10, 64)
+
+		checkTime := sliceString(Time)
+		unixTimestampSeconds, err := strconv.ParseInt(checkTime, 10, 64)
 		requestTime := time.Unix(unixTimestampSeconds, 0)
 
+		fmt.Println(now.Unix())
+		fmt.Println(requestTime.Unix())
+
 		if now.Add(-2 * time.Minute).Before(requestTime) {
-			msg := map[string]string{"message": "Request has incorrect signature"}
-			c.AbortWithStatusJSON(419, msg)
+			c.AbortWithStatusJSON(419, gin.H{"message": "Request has incorrect signature"})
 			return
 		}
 
-		if account.CanHandleWithHash(Sign, Time) == false {
+		fmt.Println(Sign)
+		fmt.Println(account.Data.Key + Time + account.Data.Secret)
+		fmt.Println(account.Data.GetHash(Time))
+
+		if account.Data.CanHandleWithHash(Sign, Time) == false {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api service not approve request"})
 			return
 		}
 
 		c.Next()
+	}
+}
+
+func sliceString(s string) string {
+	n := 10
+
+	// Convert the string to a slice of runes
+	runes := []rune(s)
+
+	// Check if the string has at least n runes
+	if len(runes) > n {
+		// Slice the rune slice and convert back to a string
+		return string(runes[:n])
+	} else {
+		// If the string is shorter than n, print the whole string
+		return s
 	}
 }
