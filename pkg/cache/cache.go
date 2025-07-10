@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func GetOrSet[T any](key string, f func() T) T {
+func GetOrSet[T any](key string, f func() T) *T {
 	gocacheClient := gocache.New(5*time.Minute, 10*time.Minute)
 	gocacheStore := go_cache.NewGoCache(gocacheClient)
 
@@ -19,7 +19,7 @@ func GetOrSet[T any](key string, f func() T) T {
 	cachedValue, err := cacheManager.Get(context.Background(), key)
 	if err == nil {
 
-		var decoded T
+		decoded := new(T)
 
 		buffer := bytes.NewBuffer(cachedValue)
 		dec := gob.NewDecoder(buffer)
@@ -45,5 +45,5 @@ func GetOrSet[T any](key string, f func() T) T {
 		panic(err)
 	}
 
-	return value
+	return &value
 }
