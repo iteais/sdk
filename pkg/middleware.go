@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
@@ -117,17 +116,14 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 		unixTimestampSeconds, err := strconv.ParseInt(checkTime, 10, 64)
 		requestTime := time.Unix(unixTimestampSeconds, 0)
 
-		fmt.Println(now.Unix())
-		fmt.Println(requestTime.Unix())
+		past := now.Add(-2 * time.Minute).Unix()
+		requestTimestamp := requestTime.Unix()
+		future := now.Add(2 * time.Minute).Unix()
 
-		if now.Add(-2 * time.Minute).Before(requestTime) {
+		if past > requestTimestamp || requestTimestamp > future {
 			c.AbortWithStatusJSON(419, gin.H{"message": "Request has incorrect signature"})
 			return
 		}
-
-		fmt.Println(Sign)
-		fmt.Println(account.Data.Key + Time + account.Data.Secret)
-		fmt.Println(account.Data.GetHash(Time))
 
 		if account.Data.CanHandleWithHash(Sign, Time) == false {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api service not approve request"})
