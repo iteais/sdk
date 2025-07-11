@@ -1,55 +1,54 @@
 package cache
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
-	"github.com/eko/gocache/lib/v4/cache"
-	"github.com/eko/gocache/store/go_cache/v4"
-	gocache "github.com/patrickmn/go-cache"
+	"github.com/go-redis/cache/v9"
+	"github.com/redis/go-redis/v9"
+	"os"
+	"strings"
 	"time"
 )
 
-var ctx context.Context
-
-func init() {
-	ctx = context.Background()
-}
-
 func GetOrSet[T any](key string, f func() T) *T {
-	gocacheClient := gocache.New(5*time.Minute, 10*time.Minute)
-	gocacheStore := go_cache.NewGoCache(gocacheClient)
 
-	cacheManager := cache.New[[]byte](gocacheStore)
+	srv := os.Getenv("CACHE_SERVER")
 
-	cachedValue, err := cacheManager.Get(ctx, key)
-	if err == nil {
+	if srv == "" {
+		val := f()
+		return &val
+	}
 
-		decoded := new(T)
+	parts := strings.Split(":", srv)
+	if len(parts) != 2 {
+		val := f()
+		return &val
+	}
 
-		buffer := bytes.NewBuffer(cachedValue)
-		dec := gob.NewDecoder(buffer)
-		err = dec.Decode(&decoded)
-		if err != nil {
+	ring := redis.NewRing(&redis.RingOptions{
+		Addrs: map[string]string{
+			parts[0]: ":" + parts[1],
+		},
+	})
+
+	mycache := cache.New(&cache.Options{
+		Redis:      ring,
+		LocalCache: cache.NewTinyLFU(1000, time.Minute),
+	})
+
+	ctx := context.TODO()
+	var val T
+	err := mycache.Get(ctx, key, val)
+
+	if err != nil {
+		val = f()
+		if err := mycache.Set(&cache.Item{
+			Ctx:   ctx,
+			Key:   key,
+			Value: val,
+			TTL:   time.Hour,
+		}); err != nil {
 			panic(err)
 		}
-
-		return decoded
 	}
-
-	value := f()
-
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err = enc.Encode(value)
-	if err != nil {
-		panic(err)
-	}
-
-	err = cacheManager.Set(ctx, key, buf.Bytes())
-	if err != nil {
-		panic(err)
-	}
-
-	return &value
+	return &val
 }
