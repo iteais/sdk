@@ -36,7 +36,7 @@ func GetOrSet[T any](key string, f func() T) *T {
 	})
 
 	ctx := context.TODO()
-	var val T
+	val := *new(T)
 	err := mycache.Get(ctx, key, val)
 
 	if err != nil {
