@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func GetOrSet[T any](key string, f func() T) *T {
+func GetOrSet[T any](key string, f func() T, duration time.Duration) *T {
 
 	srv := os.Getenv("CACHE_SERVER")
 
@@ -37,7 +37,7 @@ func GetOrSet[T any](key string, f func() T) *T {
 
 	ctx := context.TODO()
 	val := *new(T)
-	err := mycache.Get(ctx, key, val)
+	err := mycache.Get(ctx, key, &val)
 
 	if err != nil {
 		val = f()
@@ -45,7 +45,7 @@ func GetOrSet[T any](key string, f func() T) *T {
 			Ctx:   ctx,
 			Key:   key,
 			Value: val,
-			TTL:   time.Hour,
+			TTL:   duration,
 		}); err != nil {
 			panic(err)
 		}
