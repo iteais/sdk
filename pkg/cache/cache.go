@@ -18,7 +18,7 @@ func GetOrSet[T any](key string, f func() T) *T {
 		return &val
 	}
 
-	parts := strings.Split(":", srv)
+	parts := strings.Split(srv, ":")
 	if len(parts) != 2 {
 		val := f()
 		return &val
