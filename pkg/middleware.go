@@ -65,6 +65,13 @@ type hmacResponse struct {
 func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		clientIP := c.ClientIP()
+
+		if clientIP == "::1" || clientIP == "127.0.0.1" {
+			c.Next()
+			return
+		}
+
 		for localIp := range utils.LocalIps() {
 			if utils.CheckIpsInSameSubnet(c.ClientIP(), localIp.String()) {
 				c.Next()

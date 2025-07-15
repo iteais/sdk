@@ -24,10 +24,18 @@ func LocalIps() iter.Seq[net.IP] {
 }
 
 // CheckIpsInSameSubnet Проверка вхождения подсети
-func CheckIpsInSameSubnet(ip1 string, ip2 string) bool {
+func CheckIpsInSameSubnet(remoteIp string, serverIp string) bool {
 
-	ip1IP := net.ParseIP(ip1)
-	ip2IP := net.ParseIP(ip2)
+	if remoteIp == "" || serverIp == "" {
+		return false
+	}
+
+	if remoteIp == serverIp {
+		return true
+	}
+
+	ip1IP := net.ParseIP(remoteIp)
+	ip2IP := net.ParseIP(serverIp)
 
 	if ip1IP == nil || ip2IP == nil {
 		return false

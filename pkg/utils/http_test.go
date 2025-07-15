@@ -13,7 +13,7 @@ func TestCheckIpsInSameSubnet(t *testing.T) {
 		want bool
 	}{
 		{
-			name: "ips_in_same_subnet",
+			name: "ips_in_same_subnet_false",
 			args: args{
 				clientIP: "89.0.142.86",
 				serverIP: "244.178.44.111",
@@ -21,7 +21,7 @@ func TestCheckIpsInSameSubnet(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "ips_in_same_subnet_2",
+			name: "ips_in_same_subnet_true",
 			args: args{
 				clientIP: "89.0.142.86",
 				serverIP: "89.0.142.87",
