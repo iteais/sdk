@@ -44,6 +44,16 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 			query = query.Order(sortField + " " + direction)
 		}
 
+		expand := c.Query("expand")
+		if expand != "" {
+
+			relations := strings.Split(expand, ",")
+
+			for _, relation := range relations {
+				query = query.Relation(strings.TrimSpace(relation))
+			}
+		}
+
 		count, err := query.ScanAndCount(context.Background())
 
 		if err != nil {
