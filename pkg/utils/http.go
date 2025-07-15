@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"iter"
 	"net"
 )
@@ -45,9 +44,6 @@ func CheckIpsInSameSubnet(remoteIp string, serverIp string) bool {
 	defaultMask := net.CIDRMask(24, 32)
 	network1 := ip1IP.Mask(defaultMask)
 	network2 := ip2IP.Mask(defaultMask)
-
-	fmt.Println(network1.String())
-	fmt.Println(network2.String())
 
 	return network1.Equal(network2)
 }
