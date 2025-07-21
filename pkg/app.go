@@ -138,7 +138,8 @@ func initRouter(logger *log.Logger) *gin.Engine {
 	r.Use(TraceMiddleware()).
 		Use(HttpLogger(logger), gin.Recovery()).
 		Use(JsonMiddleware()).
-		Use(CorsMiddleware())
+		Use(CorsMiddleware()).
+		Use(UserMiddleware())
 
 	return r
 }

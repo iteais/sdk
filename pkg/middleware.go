@@ -3,7 +3,9 @@ package pkg
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/iteais/sdk/pkg/models"
 	"github.com/iteais/sdk/pkg/utils"
 	"io"
 	"net/http"
@@ -15,6 +17,7 @@ import (
 const (
 	TraceIdContextKey = "traceId"
 	TraceIdHttpHeader = "X-Trace-Id"
+	UserContextKey    = "user"
 )
 
 func CorsMiddleware() func(c *gin.Context) {
@@ -143,6 +146,33 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 		if account.Data.CanHandleWithHash(Sign, Time) == false {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api service not approve request"})
 			return
+		}
+
+		c.Next()
+	}
+}
+
+// UserMiddleware Добавляет в контекст информацию о текущем пользователе
+func UserMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		current, err := utils.GetRequestJwt(c)
+
+		if err != nil {
+
+			claims := current.Claims.(jwt.MapClaims)
+
+			if userMap, ok := claims["User"].(map[string]interface{}); ok {
+
+				var user models.User
+				jsonData, err := json.Marshal(userMap)
+
+				if err == nil {
+					err = json.Unmarshal(jsonData, &user)
+					if err == nil {
+						c.Set(UserContextKey, user)
+					}
+				}
+			}
 		}
 
 		c.Next()
