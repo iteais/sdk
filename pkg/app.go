@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -28,6 +29,12 @@ var App *Application
 
 func init() {
 	isReady.Store(false)
+
+	if os.Getenv("SENTRY_SERVER") != "" {
+		_ = sentry.Init(sentry.ClientOptions{
+			Dsn: os.Getenv("SENTRY_SERVER"),
+		})
+	}
 }
 
 type Application struct {
