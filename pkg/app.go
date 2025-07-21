@@ -74,38 +74,38 @@ func (a *Application) Run() {
 	<-done
 }
 
-func (a *Application) AppendGetEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.GET(route, handler)
+func (a *Application) AppendGetEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.GET(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendPostEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.POST(route, handler)
+func (a *Application) AppendPostEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.POST(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendPutEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.PUT(route, handler)
+func (a *Application) AppendPutEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.PUT(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendDeleteEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.DELETE(route, handler)
+func (a *Application) AppendDeleteEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.DELETE(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendPatchEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.PATCH(route, handler)
+func (a *Application) AppendPatchEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.PATCH(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendHeadEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.HEAD(route, handler)
+func (a *Application) AppendHeadEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.HEAD(route, handlers...)
 	return a
 }
 
-func (a *Application) AppendOptionsEndpoint(route string, handler gin.HandlerFunc) *Application {
-	a.Router.OPTIONS(route, handler)
+func (a *Application) AppendOptionsEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
+	a.Router.OPTIONS(route, handlers...)
 	return a
 }
 
