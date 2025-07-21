@@ -178,3 +178,16 @@ func UserMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AuthOnlyMiddleWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		_, e := c.Get(UserContextKey)
+		if e == false {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "You are not authorized"})
+			return
+		}
+
+		c.Next()
+	}
+}
