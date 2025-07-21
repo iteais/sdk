@@ -31,8 +31,18 @@ func init() {
 	isReady.Store(false)
 
 	if os.Getenv("SENTRY_SERVER") != "" {
+
+		sampleRate := 1.0
+		if os.Getenv("ENVIRONMENT") == "DEV" {
+			sampleRate = 0.5
+		}
+
 		_ = sentry.Init(sentry.ClientOptions{
-			Dsn: os.Getenv("SENTRY_SERVER"),
+			Dsn:              os.Getenv("SENTRY_SERVER"),
+			Debug:            os.Getenv("ENVIRONMENT") == "DEV",
+			Environment:      os.Getenv("ENVIRONMENT"),
+			EnableTracing:    true,
+			TracesSampleRate: sampleRate,
 		})
 	}
 }
@@ -44,12 +54,17 @@ type Application struct {
 }
 
 type ApplicationConfig struct {
+	AppName       string
 	MigrationPath string
 	DbSchemaName  string
 	WhiteList     []string
 }
 
 func NewApplication(config ApplicationConfig) *Application {
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		scope.SetExtra("application", config.AppName)
+	})
 
 	logger := log.New()
 	if strings.ToUpper(os.Getenv("ENVIRONMENT")) != "DEV" {
