@@ -15,6 +15,7 @@ import (
 	"os"
 	"strings"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -25,12 +26,14 @@ const (
 
 var isReady = &atomic.Value{}
 
+var hasSentry = os.Getenv("SENTRY_SERVER") != ""
+
 var App *Application
 
 func init() {
 	isReady.Store(false)
 
-	if os.Getenv("SENTRY_SERVER") != "" {
+	if hasSentry {
 
 		sampleRate := 1.0
 		if os.Getenv("ENVIRONMENT") == "DEV" {
@@ -86,6 +89,11 @@ func NewApplication(config ApplicationConfig) *Application {
 }
 
 func (a *Application) Run() {
+
+	if hasSentry {
+		defer sentry.Flush(time.Second * 5)
+	}
+
 	fmt.Println("Application is running")
 
 	a.AppendReadyProbe().AppendHealthProbe().AppendMetrics()
