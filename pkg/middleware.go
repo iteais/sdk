@@ -220,6 +220,8 @@ func RoleMiddleware(roles ...string) gin.HandlerFunc {
 				}
 			}
 		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "You has no access"})
 	}
 }
 
