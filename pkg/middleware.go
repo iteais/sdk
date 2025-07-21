@@ -18,6 +18,7 @@ const (
 	TraceIdContextKey = "traceId"
 	TraceIdHttpHeader = "X-Trace-Id"
 	UserContextKey    = "user"
+	RolesContextKey   = "roles"
 )
 
 func CorsMiddleware() func(c *gin.Context) {
@@ -173,9 +174,52 @@ func UserMiddleware() gin.HandlerFunc {
 					}
 				}
 			}
+
+			if rolesMap, ok := claims["Roles"].([]interface{}); ok {
+				var roles []models.Role
+				jsonData, err := json.Marshal(rolesMap)
+				if err == nil {
+					err = json.Unmarshal(jsonData, &roles)
+					if err == nil {
+						c.Set(RolesContextKey, roles)
+					}
+				}
+			}
+
+			c.Next()
+		}
+	}
+}
+
+// RoleMiddleware Добавляет в контекст информацию о ролях текущего пользователя
+// authorized := router.Group("/admin", RoleMiddleware("admin"))
+//
+//	{
+//	  authorized.GET("/settings", func(c *gin.Context) {
+//
+// // Handle admin settings
+// })
+// authorized.POST("/submit", func(c *gin.Context) {
+// // Handle admin submission
+//
+//	 })
+//	}
+func RoleMiddleware(roles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRoles, e := c.Get(RolesContextKey)
+		if e == false {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "You are not authorized"})
+			return
 		}
 
-		c.Next()
+		for _, userRole := range userRoles.([]models.Role) {
+			for _, requestRole := range roles {
+				if userRole.Title == requestRole {
+					c.Next()
+					return
+				}
+			}
+		}
 	}
 }
 
@@ -184,7 +228,7 @@ func AuthOnlyMiddleWare() gin.HandlerFunc {
 
 		_, e := c.Get(UserContextKey)
 		if e == false {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "You are not authorized"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "You are not authorized"})
 			return
 		}
 
