@@ -158,7 +158,7 @@ func UserMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		current, err := utils.GetRequestJwt(c)
 
-		if err != nil {
+		if err == nil {
 
 			claims := current.Claims.(jwt.MapClaims)
 
