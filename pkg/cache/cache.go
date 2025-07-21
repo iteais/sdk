@@ -30,25 +30,23 @@ func GetOrSet[T any](key string, f func() T, duration time.Duration) *T {
 		},
 	})
 
-	mycache := cache.New(&cache.Options{
+	appCache := cache.New(&cache.Options{
 		Redis:      ring,
 		LocalCache: cache.NewTinyLFU(1000, time.Minute),
 	})
 
 	ctx := context.TODO()
 	val := *new(T)
-	err := mycache.Get(ctx, key, &val)
+	err := appCache.Get(ctx, key, &val)
 
 	if err != nil {
 		val = f()
-		if err := mycache.Set(&cache.Item{
+		_ = appCache.Set(&cache.Item{
 			Ctx:   ctx,
 			Key:   key,
 			Value: val,
 			TTL:   duration,
-		}); err != nil {
-			panic(err)
-		}
+		})
 	}
 	return &val
 }
