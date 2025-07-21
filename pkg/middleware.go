@@ -162,7 +162,7 @@ func UserMiddleware() gin.HandlerFunc {
 
 			claims := current.Claims.(jwt.MapClaims)
 
-			if userMap, ok := claims["User"].(map[string]interface{}); ok {
+			if userMap, ok := claims["user"].(map[string]interface{}); ok {
 
 				var user models.User
 				jsonData, err := json.Marshal(userMap)
@@ -175,7 +175,7 @@ func UserMiddleware() gin.HandlerFunc {
 				}
 			}
 
-			if rolesMap, ok := claims["Roles"].([]interface{}); ok {
+			if rolesMap, ok := claims["roles"].([]interface{}); ok {
 				var roles []models.Role
 				jsonData, err := json.Marshal(rolesMap)
 				if err == nil {
