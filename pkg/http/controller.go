@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/iteais/sdk/pkg"
+	"github.com/iteais/sdk/pkg/utils"
 	"github.com/uptrace/bun"
 	"math"
 	"net/http"
@@ -114,7 +115,7 @@ func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 			continue
 		}
 
-		methodName := "By" + strings.ToUpper(key[:1]) + key[1:]
+		methodName := "By" + utils.ToUpperCamelCase(key)
 		method := structValue.MethodByName(methodName)
 
 		if method.IsValid() != false {

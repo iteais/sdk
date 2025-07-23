@@ -1,6 +1,10 @@
 package utils
 
-import "math/rand"
+import (
+	"math/rand"
+	"strings"
+	"unicode"
+)
 
 func SliceString(s string) string {
 	n := 10
@@ -19,10 +23,32 @@ func SliceString(s string) string {
 }
 
 func GenerateRandomString(length int) string {
+	if length <= 0 {
+		return ""
+	}
+
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
 	for i := range b {
 		b[i] = charset[rand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+// ToUpperCamelCase converts a snake_case string to UpperCamelCase.
+func ToUpperCamelCase(s string) string {
+	parts := strings.Split(s, "_")
+	if len(parts) == 0 {
+		return ""
+	}
+
+	result := []rune{}
+	for _, part := range parts {
+		if len(part) > 0 {
+			// Capitalize the first letter of all parts
+			result = append(result, unicode.ToUpper(rune(part[0])))
+			result = append(result, []rune(part[1:])...)
+		}
+	}
+	return string(result)
 }
