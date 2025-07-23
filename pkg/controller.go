@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/uptrace/bun"
 	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -54,6 +56,8 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 			}
 		}
 
+		ApplyFilter[T](c, query)
+
 		count, err := query.ScanAndCount(context.Background())
 
 		if err != nil {
@@ -88,4 +92,30 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 
 		c.JSON(200, gin.H{"data": modelsArray})
 	}
+}
+
+func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
+
+	filter, exists := c.GetQueryMap("filter")
+	if exists == false {
+		return
+	}
+
+	model := new(T)
+	structValue := reflect.ValueOf(model)
+
+	for key, value := range filter {
+		if key == "" || value == "" {
+			continue
+		}
+
+		methodName := "By" + strings.ToUpper(key[:1]) + key[1:]
+		method := structValue.MethodByName(methodName)
+
+		if method.IsValid() != false {
+			args := []reflect.Value{reflect.ValueOf(value), reflect.ValueOf(query)}
+			method.Call(args)
+		}
+	}
+
 }
