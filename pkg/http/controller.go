@@ -1,9 +1,10 @@
-package pkg
+package http
 
 import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/iteais/sdk/pkg"
 	"github.com/uptrace/bun"
 	"math"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"strings"
 )
 
-func ListAction[T interface{}]() func(c *gin.Context) {
+func ListAction[T interface{}](postFindFuncs ...func(*[]T)) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		modelsArray := make([]T, 0)
@@ -23,7 +24,7 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 		pageParam := c.DefaultQuery("page", "1")
 		page, _ := strconv.Atoi(pageParam)
 
-		query := App.Db.NewSelect().
+		query := pkg.App.Db.NewSelect().
 			Model(&modelsArray).
 			Limit(perPage).
 			Offset((page - 1) * perPage)
@@ -85,6 +86,10 @@ func ListAction[T interface{}]() func(c *gin.Context) {
 		calcXpcp := xppc - page
 		if calcXpcp > 0 {
 			xpcp = int(calcXpcp)
+		}
+
+		for _, f := range postFindFuncs {
+			f(&modelsArray)
 		}
 
 		//x-pagination-current-page
