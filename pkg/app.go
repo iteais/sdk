@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
@@ -12,9 +13,12 @@ import (
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	"github.com/uptrace/bun"
+	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -99,9 +103,34 @@ func (a *Application) Run() {
 	a.AppendReadyProbe().AppendHealthProbe().AppendMetrics()
 
 	done := make(chan bool)
-	go a.Router.Run(os.Getenv("HTTP_ADDR"))
+
+	srv := &http.Server{
+		Addr:    os.Getenv("HTTP_ADDR"),
+		Handler: a.Router,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Ошибка сервера при запуске: %v\n", err)
+		}
+	}()
+
 	isReady.Store(true)
 	<-done
+	/* Grace full shutdown*/
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Получен сигнал остановки. Завершение приложения...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Ошибка при остановке сервера: %v\n", err)
+	}
+
+	log.Println("Сервер успешно завершен")
 }
 
 func (a *Application) AppendGetEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
