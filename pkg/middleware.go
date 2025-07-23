@@ -61,7 +61,7 @@ func TraceMiddleware() gin.HandlerFunc {
 
 type hmacResponse struct {
 	Cnt   int
-	Data  ApiAccount
+	Data  models.ApiAccount
 	Error string
 }
 
