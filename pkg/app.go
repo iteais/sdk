@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/iteais/sdk/pkg/app"
 	"github.com/oiime/logrusbun"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -79,8 +80,8 @@ func NewApplication(config ApplicationConfig) *Application {
 	}
 	log.SetOutput(logger.Writer())
 
-	dbConn := initDb()
-	dbMigrate(config.MigrationPath, config.DbSchemaName)
+	dbConn := app.InitDb()
+	app.DbMigrate(config.MigrationPath, config.DbSchemaName)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
 	App = &Application{

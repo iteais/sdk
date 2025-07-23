@@ -1,4 +1,4 @@
-package pkg
+package app
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func getDbDsn() string {
 	)
 }
 
-func initDb() *bun.DB {
+func InitDb() *bun.DB {
 	dsn := getDbDsn()
 
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
@@ -32,7 +32,7 @@ func initDb() *bun.DB {
 	return db
 }
 
-func dbMigrate(path string, schemaName string) {
+func DbMigrate(path string, schemaName string) {
 
 	dsn := getDbDsn()
 

@@ -1,10 +1,9 @@
-package http
+package pkg
 
 import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/iteais/sdk/pkg"
 	"github.com/iteais/sdk/pkg/utils"
 	"github.com/uptrace/bun"
 	"math"
@@ -25,7 +24,7 @@ func ListAction[T interface{}](postFindFuncs ...func(*[]T)) func(c *gin.Context)
 		pageParam := c.DefaultQuery("page", "1")
 		page, _ := strconv.Atoi(pageParam)
 
-		query := pkg.App.Db.NewSelect().
+		query := App.Db.NewSelect().
 			Model(&modelsArray).
 			Limit(perPage).
 			Offset((page - 1) * perPage)
