@@ -126,14 +126,14 @@ func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 
 }
 
-func UpdateAction[T interface{}]() func(*gin.Context) {
+func UpdateAction[T interface{}](pk string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
 		existModel := new(T)
 		query := App.Db.NewSelect().
 			Model(existModel).
-			Where("id = ?", id)
+			Where("? = ?", bun.Ident(pk), id)
 		count, err := query.ScanAndCount(c)
 
 		if count < 1 {
@@ -153,13 +153,15 @@ func UpdateAction[T interface{}]() func(*gin.Context) {
 			return
 		}
 
-		_, err = App.Db.NewUpdate().
+		q := App.Db.NewUpdate().
 			Model(newModel).
-			Where("a.id = ?", id).
-			Exec(c)
+			Where("? = ?", bun.Ident(pk), id)
+
+		_, err = q.Exec(c)
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+			fmt.Println(q.String())
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err, "sql": q})
 			return
 		}
 
