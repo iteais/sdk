@@ -35,6 +35,7 @@ func main() {
 	app.AppendGetEndpoint("/user/:id", controllers.GetById()).
 		AppendGetEndpoint("/user/proxy", controllers.Proxy()).
 		AppendGetEndpoint("/user/list", pkg.ListAction[models.User]()).
+		AppendGetEndpoint("/user/update", pkg.UpdateAction[models.User]()).
 		AppendSwagger("").
 		Run()
 }

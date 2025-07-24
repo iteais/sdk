@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/iteais/sdk/pkg/models"
 	"github.com/iteais/sdk/pkg/utils"
 	"github.com/uptrace/bun"
 	"math"
@@ -123,4 +124,46 @@ func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 		}
 	}
 
+}
+
+func UpdateAction[T interface{}]() func(*gin.Context) {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		existModel := new(T)
+		query := App.Db.NewSelect().
+			Model(existModel).
+			Where("id = ?", id)
+		count, err := query.ScanAndCount(c)
+
+		if count < 1 {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+
+		newModel, loadErrors := models.LoadModel(c, existModel, make(map[string]string))
+
+		if len(loadErrors) > 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": loadErrors})
+			return
+		}
+
+		_, err = App.Db.NewUpdate().
+			Model(newModel).
+			Where("a.id = ?", id).
+			Exec(c)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+
+		c.JSON(http.StatusOK, newModel)
+		return
+	}
 }
