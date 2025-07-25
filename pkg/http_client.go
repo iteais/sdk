@@ -10,23 +10,40 @@ import (
 	"time"
 )
 
-func NewInternalHttpClient(method string, url string, requestBody string, traceId string) *http.Response {
+type InternalFetchConfig struct {
+	Method  string
+	Url     string
+	Body    string
+	JWT     string
+	TraceId string
+}
+
+func InternalFetch(config InternalFetchConfig) *http.Response {
 	client := &http.Client{
-		Transport: NewRetryableTransport(nil, 3, 1*time.Second, traceId), // 3 retries, 1s initial delay
-		Timeout:   10 * time.Second,                                      // Set a timeout for the request
+		Transport: NewRetryableTransport(nil, 3, 1*time.Second, config.TraceId), // 3 retries, 1s initial delay
+		Timeout:   10 * time.Second,                                             // Set a timeout for the request
 	}
 
-	req, err := http.NewRequest(method, url, strings.NewReader(requestBody))
+	req, err := http.NewRequest(config.Method, config.Url, nil)
+
+	if config.Body != "" {
+		req, err = http.NewRequest(config.Method, config.Url, strings.NewReader(config.Body))
+	}
+
 	if err != nil {
-		App.Log.WithField(TraceIdContextKey, traceId).Println("Error creating request:", err)
+		App.Log.WithField(TraceIdContextKey, config.TraceId).Println("Error creating request:", err)
 		return nil
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(TraceIdHttpHeader, traceId)
+	req.Header.Set(TraceIdHttpHeader, config.TraceId)
+
+	if config.JWT != "" {
+		req.Header.Set("Authorization", config.JWT)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		App.Log.WithField(TraceIdContextKey, traceId).Println("Error making "+method+" request:", err)
+		App.Log.WithField(TraceIdContextKey, config.TraceId).Println("Error making "+config.Method+" request:", err)
 		return nil
 	}
 

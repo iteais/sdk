@@ -101,7 +101,12 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			return
 		}
 
-		resp := NewInternalHttpClient("GET", checkHost+"/api/byKey/"+key, "", c.GetString(TraceIdContextKey))
+		resp := InternalFetch(InternalFetchConfig{
+			Method:  "GET",
+			Url:     checkHost + "/api/byKey/" + key,
+			JWT:     c.GetString("Authorization"),
+			TraceId: c.GetString(TraceIdContextKey),
+		})
 
 		if resp == nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Cant call api service"})
