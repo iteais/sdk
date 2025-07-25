@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func ListAction[T interface{}](postFindFuncs ...func(*[]T)) func(c *gin.Context) {
+func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		modelsArray := make([]T, 0)
@@ -90,7 +90,7 @@ func ListAction[T interface{}](postFindFuncs ...func(*[]T)) func(c *gin.Context)
 		}
 
 		for _, f := range postFindFuncs {
-			f(&modelsArray)
+			f(c, &modelsArray)
 		}
 
 		//x-pagination-current-page
