@@ -12,9 +12,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
-func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
+func ListAction[T struct{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		modelsArray := make([]T, 0)
@@ -60,6 +62,13 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 		ApplyFilter[T](c, query)
 
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			appendLastModifiedHeader[T](c, query)
+		}()
+
 		count, err := query.ScanAndCount(context.Background())
 
 		if err != nil {
@@ -95,8 +104,35 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 		//x-pagination-current-page
 		c.Header("x-pagination-current-page", fmt.Sprintf("%d", xpcp))
-
+		wg.Wait()
 		c.JSON(200, gin.H{"data": modelsArray})
+	}
+}
+
+func appendLastModifiedHeader[T struct{}](c *gin.Context, query *bun.SelectQuery) {
+	t := new(T)
+	typ := reflect.TypeOf(t)
+
+	field := ""
+
+	if _, found := typ.FieldByName("UpdatedAt"); found {
+		field = "updated_at"
+	} else if _, found := typ.FieldByName("CreatedAt"); found {
+		field = "created_at"
+	}
+
+	if field != "" {
+
+		var timeString string
+
+		query.ColumnExpr(field).Order("? DESC", field).Scan(c, timeString)
+		layout := "2006-01-02 15:04:05"
+
+		dt, err := time.Parse(layout, timeString)
+
+		if err != nil {
+			c.Header("Last-Modified", dt.Format(time.RFC1123))
+		}
 	}
 }
 
