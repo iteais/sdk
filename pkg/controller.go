@@ -122,6 +122,13 @@ func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 			args := []reflect.Value{reflect.ValueOf(value), reflect.ValueOf(query)}
 			method.Call(args)
 		}
+
+		additionalFilter := structValue.MethodByName("CommonListFilter")
+
+		if additionalFilter.IsValid() != false {
+			args := []reflect.Value{reflect.ValueOf(c), reflect.ValueOf(query)}
+			additionalFilter.Call(args)
+		}
 	}
 
 }
