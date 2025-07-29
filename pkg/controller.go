@@ -85,7 +85,7 @@ func ListAction[T struct{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *g
 		c.Header("x-pagination-per-page", fmt.Sprintf("%d", perPage))
 
 		xppc := 1
-		calcXppc := math.Round(float64(count / perPage))
+		calcXppc := math.Ceil(float64(count / perPage))
 		if calcXppc > 0 {
 			xppc = int(calcXppc)
 		}
