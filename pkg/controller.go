@@ -66,8 +66,10 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			appendLastModifiedHeader[T](c, query)
+			appendLastModifiedHeader[T](c)
 		}()
+
+		fmt.Println(query.String())
 
 		count, err := query.ScanAndCount(context.Background())
 
@@ -109,20 +111,27 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 	}
 }
 
-func appendLastModifiedHeader[T interface{}](c *gin.Context, query *bun.SelectQuery) {
+func appendLastModifiedHeader[T interface{}](c *gin.Context) {
 	model := new(T)
 	if found, ok := interface{}(model).(models.ModelLastModified); ok {
+
 		field := found.LastModifiedField()
 
 		var timeString string
 
-		query.ColumnExpr(field).Order("? DESC", field).Scan(c, timeString)
-		layout := "2006-01-02 15:04:05"
+		query := App.Db.NewSelect().
+			Model(model).ColumnExpr(field).Order(field + " DESC").Limit(1)
 
-		dt, err := time.Parse(layout, timeString)
+		ApplyFilter[T](c, query)
 
-		if err != nil {
-			c.Header("Last-Modified", dt.Format(time.RFC1123))
+		err := query.Scan(context.Background(), &timeString)
+		if err == nil && timeString != "" {
+			layout := "2006-01-02T15:04:05.999999Z"
+			dt, err := time.Parse(layout, timeString)
+			if err == nil {
+				format := dt.Format(time.RFC1123)
+				c.Header("Last-Modified", format)
+			}
 		}
 	}
 }
