@@ -10,6 +10,10 @@ type ModelAfterLoad interface {
 	AfterLoad()
 }
 
+type ModelLastModified interface {
+	LastModifiedField() string
+}
+
 func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]string) (T, map[string][]string) {
 	if err := c.ShouldBindJSON(&model); err != nil {
 		var ve validator.ValidationErrors

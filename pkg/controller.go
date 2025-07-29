@@ -111,16 +111,8 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 func appendLastModifiedHeader[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 	model := new(T)
-	structValue := reflect.ValueOf(model)
-	field := ""
-
-	if found := structValue.FieldByName("UpdatedAt"); found.IsValid() {
-		field = "updated_at"
-	} else if found := structValue.FieldByName("CreatedAt"); found.IsValid() {
-		field = "created_at"
-	}
-
-	if field != "" {
+	if found, ok := interface{}(model).(models.ModelLastModified); ok {
+		field := found.LastModifiedField()
 
 		var timeString string
 
