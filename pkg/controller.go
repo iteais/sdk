@@ -94,18 +94,13 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 		c.Header("x-pagination-page-count", fmt.Sprintf("%d", xppc))
 
-		xpcp := 1
-		calcXpcp := xppc - page
-		if calcXpcp > 0 {
-			xpcp = int(calcXpcp)
-		}
+		//x-pagination-current-page
+		c.Header("x-pagination-current-page", fmt.Sprintf("%d", page))
 
 		for _, f := range postFindFuncs {
 			f(c, &modelsArray)
 		}
 
-		//x-pagination-current-page
-		c.Header("x-pagination-current-page", fmt.Sprintf("%d", xpcp))
 		wg.Wait()
 		c.JSON(200, gin.H{"data": modelsArray})
 	}
