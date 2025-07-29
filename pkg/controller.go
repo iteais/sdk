@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func ListAction[T struct{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
+func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		modelsArray := make([]T, 0)
@@ -109,7 +109,7 @@ func ListAction[T struct{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *g
 	}
 }
 
-func appendLastModifiedHeader[T struct{}](c *gin.Context, query *bun.SelectQuery) {
+func appendLastModifiedHeader[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 	t := new(T)
 	typ := reflect.TypeOf(t)
 
