@@ -87,7 +87,7 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 		c.Header("x-pagination-per-page", fmt.Sprintf("%d", perPage))
 
 		xppc := 1
-		calcXppc := math.Ceil(float64(count / perPage))
+		calcXppc := math.Ceil(float64(count) / float64(perPage))
 		if calcXppc > 0 {
 			xppc = int(calcXppc)
 		}
