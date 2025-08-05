@@ -7,7 +7,7 @@ import (
 )
 
 type ModelAfterLoad interface {
-	AfterLoad()
+	AfterLoad(c *gin.Context)
 }
 
 type ModelLastModified interface {
@@ -27,7 +27,7 @@ func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]
 	}
 
 	if afterLoadModel, ok := interface{}(model).(ModelAfterLoad); ok {
-		afterLoadModel.AfterLoad()
+		afterLoadModel.AfterLoad(c)
 		return afterLoadModel.(T), nil
 	}
 
