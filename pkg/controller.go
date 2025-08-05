@@ -203,3 +203,32 @@ func UpdateAction[T interface{}](pk string) func(*gin.Context) {
 		return
 	}
 }
+
+func CreateAction[T interface{}]() func(*gin.Context) {
+	return func(c *gin.Context) {
+
+		modelType := new(T)
+
+		model, loadErrors := models.LoadModel[T](c, *modelType, make(map[string]string))
+
+		if len(loadErrors) > 0 {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": loadErrors})
+			return
+		}
+
+		query := App.Db.NewInsert().Model(&model)
+
+		App.Log.Info(query.String())
+
+		_, err := query.Exec(context.Background())
+
+		errMsg := ""
+
+		if err != nil {
+			errMsg = err.Error()
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"data": model, "error": errMsg})
+		return
+	}
+}
