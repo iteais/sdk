@@ -56,7 +56,8 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 			relations := strings.Split(expand, ",")
 
 			for _, relation := range relations {
-				query = query.Relation(strings.TrimSpace(relation))
+				relation = utils.ToUpperCamelCase(strings.TrimSpace(relation))
+				query = query.Relation(relation)
 			}
 		}
 
