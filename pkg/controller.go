@@ -78,11 +78,6 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 			return
 		}
 
-		if count < 1 {
-			c.JSON(http.StatusNotFound, gin.H{})
-			return
-		}
-
 		c.Header("X-Total-Count", fmt.Sprintf("%d", count))
 		c.Header("x-pagination-per-page", fmt.Sprintf("%d", perPage))
 
