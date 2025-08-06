@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"reflect"
 )
 
 type ModelAfterLoad interface {
@@ -32,4 +33,21 @@ func LoadModel[T interface{}](c *gin.Context, model T, errorMessages map[string]
 	}
 
 	return model, nil
+}
+
+// CallModelFunc
+// Usage:
+// model := models.Event{}
+// CallModelFunc(&model, "SetCreator", "value")
+func CallModelFunc(model interface{}, methodName string, args ...interface{}) {
+	rm := reflect.ValueOf(model)
+	method := rm.MethodByName(methodName)
+	if method.IsValid() != false {
+
+		in := make([]reflect.Value, len(args))
+		for i, arg := range args {
+			in[i] = reflect.ValueOf(arg)
+		}
+		method.Call(in)
+	}
 }
