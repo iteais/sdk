@@ -4,17 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/getsentry/sentry-go"
-	"github.com/gin-gonic/gin"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/iteais/sdk/pkg/app"
-	"github.com/oiime/logrusbun"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
-	"github.com/swaggo/files"
-	"github.com/swaggo/gin-swagger"
-	"github.com/uptrace/bun"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,6 +11,19 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/getsentry/sentry-go"
+	"github.com/gin-gonic/gin"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/iteais/sdk/pkg/app"
+	"github.com/minio/minio-go/v7"
+	"github.com/oiime/logrusbun"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
+	"github.com/uptrace/bun"
 )
 
 const (
@@ -57,9 +59,10 @@ func init() {
 }
 
 type Application struct {
-	Db     *bun.DB
-	Router *gin.Engine
-	Log    *log.Logger
+	Db      *bun.DB
+	Router  *gin.Engine
+	Log     *log.Logger
+	Storage *minio.Client
 }
 
 type ApplicationConfig struct {
@@ -86,9 +89,10 @@ func NewApplication(config ApplicationConfig) *Application {
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
 	App = &Application{
-		Db:     dbConn,
-		Router: initRouter(logger),
-		Log:    logger,
+		Db:      dbConn,
+		Router:  initRouter(logger),
+		Log:     logger,
+		Storage: app.InitStorage(),
 	}
 
 	return App
