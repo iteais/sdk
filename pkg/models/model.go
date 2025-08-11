@@ -1,10 +1,17 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"reflect"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"reflect"
+	"github.com/iteais/sdk/pkg"
 )
 
 type ModelAfterLoad interface {
@@ -50,4 +57,43 @@ func CallModelFunc(model interface{}, methodName string, args ...interface{}) {
 		}
 		method.Call(in)
 	}
+}
+
+func GetImage(entity string, entityId string, traceId string, defaultImage string) string {
+
+	params := &url.Values{}
+	params.Add("limit", "1")
+	params.Add("offset", "0")
+	params.Add("sort[field]", "created_at")
+	params.Add("sort[order]", "DESC")
+	params.Add("filter[entity]", entity)
+	params.Add("filter[entity_id]", entityId)
+
+	var StorageResponse struct {
+		Id      int    `json:"id"`
+		Message string `json:"message"`
+		Url     string `json:"url"`
+	}
+
+	resp := pkg.InternalFetch(pkg.InternalFetchConfig{
+		Method:  "GET",
+		Url:     os.Getenv("STORAGE_SERVER") + "/internal/storage/list?" + params.Encode(),
+		TraceId: traceId,
+	})
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == http.StatusOK {
+		err = json.Unmarshal(body, &StorageResponse)
+		if err != nil {
+			return defaultImage
+		}
+		return StorageResponse.Url
+	}
+
+	return defaultImage
 }
