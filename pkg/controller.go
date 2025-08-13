@@ -3,10 +3,6 @@ package pkg
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/iteais/sdk/pkg/models"
-	"github.com/iteais/sdk/pkg/utils"
-	"github.com/uptrace/bun"
 	"math"
 	"net/http"
 	"reflect"
@@ -14,6 +10,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/iteais/sdk/pkg/models"
+	"github.com/iteais/sdk/pkg/utils"
+	"github.com/uptrace/bun"
 )
 
 func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
@@ -189,7 +190,8 @@ func UpdateAction[T interface{}](pk string) func(*gin.Context) {
 
 		q := App.Db.NewUpdate().
 			Model(newModel).
-			Where("? = ?", bun.Ident(pk), id)
+			Where("? = ?", bun.Ident(pk), id).
+			OmitZero()
 
 		_, err = q.Exec(c)
 
