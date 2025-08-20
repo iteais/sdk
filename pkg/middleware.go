@@ -2,16 +2,17 @@ package pkg
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"github.com/iteais/sdk/pkg/models"
-	"github.com/iteais/sdk/pkg/utils"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/iteais/sdk/pkg/models"
+	"github.com/iteais/sdk/pkg/utils"
 )
 
 const (
@@ -83,7 +84,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			}
 		}
 
-		wl := append([]string{MetricsEndpoint, HealthEndpoint, ReadyEndpoint}, whiteList...)
+		wl := append([]string{MetricsEndpoint, HealthEndpoint, ReadyEndpoint, SwaggerEndpoint}, whiteList...)
 
 		for _, s := range wl {
 			if ok, _ := regexp.MatchString(s, c.Request.URL.Path); ok {
@@ -100,7 +101,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api-Key or Api-Sign or Api-Time is empty"})
 			return
 		}
-
+		// TODO: may be cache it
 		resp := InternalFetch(InternalFetchConfig{
 			Method:  "GET",
 			Url:     checkHost + "/api/byKey/" + key,

@@ -30,6 +30,7 @@ const (
 	HealthEndpoint  = "/health"
 	MetricsEndpoint = "/metrics"
 	ReadyEndpoint   = "/ready"
+	SwaggerEndpoint = "/swagger/*"
 )
 
 var isReady = &atomic.Value{}
@@ -74,9 +75,11 @@ type ApplicationConfig struct {
 
 func NewApplication(config ApplicationConfig) *Application {
 
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetExtra("application", config.AppName)
-	})
+	if hasSentry {
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetExtra("application", config.AppName)
+		})
+	}
 
 	logger := log.New()
 	if strings.ToUpper(os.Getenv("ENVIRONMENT")) != "DEV" {
@@ -88,9 +91,13 @@ func NewApplication(config ApplicationConfig) *Application {
 	app.DbMigrate(config.MigrationPath, config.DbSchemaName)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
+	if config.WhiteList == nil {
+		config.WhiteList = []string{}
+	}
+
 	App = &Application{
 		Db:      dbConn,
-		Router:  initRouter(logger),
+		Router:  initRouter(logger, config.WhiteList...),
 		Log:     logger,
 		Storage: app.InitStorage(),
 	}
@@ -199,13 +206,14 @@ func (a *Application) GetRequestLogger(c *gin.Context) *log.Entry {
 	return a.Log.WithField(TraceIdContextKey, c.GetString(TraceIdContextKey))
 }
 
-func initRouter(logger *log.Logger) *gin.Engine {
+func initRouter(logger *log.Logger, whiteList ...string) *gin.Engine {
 	r := gin.Default()
 	r.Use(TraceMiddleware()).
 		Use(HttpLogger(logger), gin.Recovery()).
 		Use(JsonMiddleware()).
 		Use(CorsMiddleware()).
-		Use(UserMiddleware())
+		Use(UserMiddleware()).
+		Use(HmacMiddleware(os.Getenv("HMAC_SERVER"), whiteList...))
 
 	return r
 }
