@@ -1,0 +1,32 @@
+name: PHP Composer
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.4'
+      - name: Run go mod tidy
+        run: go mod tidy
+      - name: tests
+        run:  go test -tags exclude_from_test ./...
+  release:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: '${{ secrets.GH_TOKEN }}'
