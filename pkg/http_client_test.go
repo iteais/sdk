@@ -1,9 +1,13 @@
+//go:build !exclude_from_test
+
+// exclude because it makes http requests which cant be mocked in ci
 package pkg
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFetchEventById(t *testing.T) {

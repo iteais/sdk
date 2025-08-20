@@ -17,7 +17,7 @@ jobs:
         with:
           go-version: '1.24.4'
       - name: tests
-        run: go test ./...
+        run:  go test -tags exclude_from_test ./...
       - name: Release
         uses: softprops/action-gh-release@v2
 
