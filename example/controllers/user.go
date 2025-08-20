@@ -7,7 +7,21 @@ import (
 	"github.com/iteais/sdk/example/models"
 	"github.com/iteais/sdk/pkg"
 	"io"
+	"strings"
 )
+
+
+// SplitAndTrim splits a string by sep and trims whitespace from each element.
+func SplitAndTrim(s, sep string) []string {
+	parts := []string{}
+	for _, p := range strings.Split(s, sep) {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return parts
+}
 
 // GetById godoc
 // @Summary      Get user by id
@@ -22,6 +36,14 @@ func GetById() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		id := c.Param("id")
+		// Define allowed columns for user model
+		allowedColumns := map[string]bool{
+			"id":    true,
+			"name":  true,
+			"email": true,
+			// Add other allowed columns here
+		}
+
 		fields := c.Query("fields")
 
 		user := new(models.User)
@@ -30,7 +52,16 @@ func GetById() gin.HandlerFunc {
 			Where("id = ?", id)
 
 		if fields != "" {
-			query = query.ColumnExpr(fields)
+			// Split fields by comma and validate each
+			validFields := []string{}
+			for _, f := range pkg.SplitAndTrim(fields, ",") {
+				if allowedColumns[f] {
+					validFields = append(validFields, f)
+				}
+			}
+			if len(validFields) > 0 {
+				query = query.Column(validFields...)
+			}
 		}
 
 		pkg.App.GetRequestLogger(c).Info(query.String())
