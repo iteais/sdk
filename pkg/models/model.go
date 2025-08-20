@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"reflect"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -51,4 +52,30 @@ func CallModelFunc(model interface{}, methodName string, args ...interface{}) {
 		}
 		method.Call(in)
 	}
+}
+
+// GetModelFields returns a set of allowed field names for the model type T.
+func GetModelFields[T any]() map[string]struct{} {
+	var allowed = make(map[string]struct{})
+	var t T
+	typ := reflect.TypeOf(t)
+	// If T is a pointer, get the element type
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	if typ.Kind() == reflect.Struct {
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			// Use the bun tag if present, otherwise the struct field name
+			col := field.Tag.Get("bun")
+			if col == "" || col == "-" {
+				col = field.Name
+			} else {
+				// bun tag may have options, take only the column name
+				col = strings.Split(col, ",")[0]
+			}
+			allowed[col] = struct{}{}
+		}
+	}
+	return allowed
 }

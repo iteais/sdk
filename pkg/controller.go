@@ -35,7 +35,18 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 		fields := c.Query("fields")
 		if fields != "" {
-			query = query.ColumnExpr(fields)
+			allowedFields := models.GetModelFields[T]()
+			requestedFields := strings.Split(fields, ",")
+			validFields := make([]string, 0, len(requestedFields))
+			for _, f := range requestedFields {
+				f = strings.TrimSpace(f)
+				if _, ok := allowedFields[f]; ok {
+					validFields = append(validFields, f)
+				}
+			}
+			if len(validFields) > 0 {
+				query = query.Column(validFields...)
+			}
 		}
 
 		sort := c.Query("sort")
