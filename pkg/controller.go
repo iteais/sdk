@@ -17,33 +17,6 @@ import (
 	"github.com/uptrace/bun"
 )
 
-
-// getAllowedFields returns a set of allowed field names for the model type T.
-func getAllowedFields[T any]() map[string]struct{} {
-	var allowed = make(map[string]struct{})
-	var t T
-	typ := reflect.TypeOf(t)
-	// If T is a pointer, get the element type
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-	}
-	if typ.Kind() == reflect.Struct {
-		for i := 0; i < typ.NumField(); i++ {
-			field := typ.Field(i)
-			// Use the bun tag if present, otherwise the struct field name
-			col := field.Tag.Get("bun")
-			if col == "" || col == "-" {
-				col = field.Name
-			} else {
-				// bun tag may have options, take only the column name
-				col = strings.Split(col, ",")[0]
-			}
-			allowed[col] = struct{}{}
-		}
-	}
-	return allowed
-}
-
 func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
@@ -62,7 +35,7 @@ func ListAction[T interface{}](postFindFuncs ...func(*gin.Context, *[]T)) func(c
 
 		fields := c.Query("fields")
 		if fields != "" {
-			allowedFields := getAllowedFields[T]()
+			allowedFields := models.GetModelFields[T]()
 			requestedFields := strings.Split(fields, ",")
 			validFields := make([]string, 0, len(requestedFields))
 			for _, f := range requestedFields {
