@@ -1,4 +1,6 @@
 name: PHP Composer
+permissions:
+  contents: read
 
 on:
   push:
@@ -25,6 +27,8 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Release
         uses: softprops/action-gh-release@v2
