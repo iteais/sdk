@@ -2,31 +2,84 @@ package pkg
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/iteais/sdk/pkg/models"
 	"io"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
-func NewInternalHttpClient(method string, url string, requestBody string, traceId string) *http.Response {
-	client := &http.Client{
-		Transport: NewRetryableTransport(nil, 3, 1*time.Second, traceId), // 3 retries, 1s initial delay
-		Timeout:   10 * time.Second,                                      // Set a timeout for the request
+type InternalFetchConfig struct {
+	Method  string
+	Url     string
+	Body    string
+	JWT     string
+	TraceId string
+}
+
+func FetchEventById(id int64, traceId string, jwt string) (models.Event, error) {
+	resp := InternalFetch(InternalFetchConfig{
+		Method:  "GET",
+		Url:     fmt.Sprintf("%s/event/%d", os.Getenv("EVENT_SERVER"), id),
+		TraceId: traceId,
+		JWT:     jwt,
+	})
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	type RespModel struct {
+		Data  models.Event `json:"data"`
+		Error error        `json:"error"`
 	}
 
-	req, err := http.NewRequest(method, url, strings.NewReader(requestBody))
+	var respModel RespModel
+	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == http.StatusOK {
+		err = json.Unmarshal(body, &respModel)
+		if err != nil {
+			return models.Event{}, err
+
+		}
+		return respModel.Data, err
+	}
+
+	return models.Event{}, errors.New("Event microservice status code: " + resp.Status)
+}
+
+func InternalFetch(config InternalFetchConfig) *http.Response {
+	client := &http.Client{
+		Transport: NewRetryableTransport(nil, 3, 1*time.Second, config.TraceId), // 3 retries, 1s initial delay
+		Timeout:   10 * time.Second,                                             // Set a timeout for the request
+	}
+
+	req, err := http.NewRequest(config.Method, config.Url, nil)
+
+	if config.Body != "" {
+		req, err = http.NewRequest(config.Method, config.Url, strings.NewReader(config.Body))
+	}
+
 	if err != nil {
-		App.Log.WithField(TraceIdContextKey, traceId).Println("Error creating request:", err)
+		App.Log.WithField(TraceIdContextKey, config.TraceId).Println("Error creating request:", err)
 		return nil
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set(TraceIdHttpHeader, traceId)
+	req.Header.Set(TraceIdHttpHeader, config.TraceId)
+
+	if config.JWT != "" {
+		req.Header.Set("Authorization", config.JWT)
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		App.Log.WithField(TraceIdContextKey, traceId).Println("Error making "+method+" request:", err)
+		App.Log.WithField(TraceIdContextKey, config.TraceId).Println("Error making "+config.Method+" request:", err)
 		return nil
 	}
 

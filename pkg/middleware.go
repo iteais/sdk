@@ -2,16 +2,17 @@ package pkg
 
 import (
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"github.com/iteais/sdk/pkg/models"
-	"github.com/iteais/sdk/pkg/utils"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"github.com/iteais/sdk/pkg/models"
+	"github.com/iteais/sdk/pkg/utils"
 )
 
 const (
@@ -61,7 +62,7 @@ func TraceMiddleware() gin.HandlerFunc {
 
 type hmacResponse struct {
 	Cnt   int
-	Data  ApiAccount
+	Data  models.ApiAccount
 	Error string
 }
 
@@ -83,7 +84,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			}
 		}
 
-		wl := append([]string{MetricsEndpoint, HealthEndpoint, ReadyEndpoint}, whiteList...)
+		wl := append([]string{MetricsEndpoint, HealthEndpoint, ReadyEndpoint, SwaggerEndpoint}, whiteList...)
 
 		for _, s := range wl {
 			if ok, _ := regexp.MatchString(s, c.Request.URL.Path); ok {
@@ -100,8 +101,13 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "Api-Key or Api-Sign or Api-Time is empty"})
 			return
 		}
-
-		resp := NewInternalHttpClient("GET", checkHost+"/api/byKey/"+key, "", c.GetString(TraceIdContextKey))
+		// TODO: may be cache it
+		resp := InternalFetch(InternalFetchConfig{
+			Method:  "GET",
+			Url:     checkHost + "/api/byKey/" + key,
+			JWT:     c.GetString("Authorization"),
+			TraceId: c.GetString(TraceIdContextKey),
+		})
 
 		if resp == nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Cant call api service"})

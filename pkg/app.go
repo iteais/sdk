@@ -1,27 +1,36 @@
 package pkg
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"sync/atomic"
+	"syscall"
+	"time"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/iteais/sdk/pkg/app"
+	"github.com/minio/minio-go/v7"
 	"github.com/oiime/logrusbun"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	"github.com/uptrace/bun"
-	"os"
-	"strings"
-	"sync/atomic"
-	"time"
 )
 
 const (
 	HealthEndpoint  = "/health"
 	MetricsEndpoint = "/metrics"
 	ReadyEndpoint   = "/ready"
+	SwaggerEndpoint = "/swagger/*"
 )
 
 var isReady = &atomic.Value{}
@@ -51,9 +60,10 @@ func init() {
 }
 
 type Application struct {
-	Db     *bun.DB
-	Router *gin.Engine
-	Log    *log.Logger
+	Db      *bun.DB
+	Router  *gin.Engine
+	Log     *log.Logger
+	Storage *minio.Client
 }
 
 type ApplicationConfig struct {
@@ -65,9 +75,11 @@ type ApplicationConfig struct {
 
 func NewApplication(config ApplicationConfig) *Application {
 
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
-		scope.SetExtra("application", config.AppName)
-	})
+	if hasSentry {
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetExtra("application", config.AppName)
+		})
+	}
 
 	logger := log.New()
 	if strings.ToUpper(os.Getenv("ENVIRONMENT")) != "DEV" {
@@ -75,14 +87,19 @@ func NewApplication(config ApplicationConfig) *Application {
 	}
 	log.SetOutput(logger.Writer())
 
-	dbConn := initDb()
-	dbMigrate(config.MigrationPath, config.DbSchemaName)
+	dbConn := app.InitDb()
+	app.DbMigrate(config.MigrationPath, config.DbSchemaName)
 	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
+	if config.WhiteList == nil {
+		config.WhiteList = []string{}
+	}
+
 	App = &Application{
-		Db:     dbConn,
-		Router: initRouter(logger),
-		Log:    logger,
+		Db:      dbConn,
+		Router:  initRouter(logger, config.WhiteList...),
+		Log:     logger,
+		Storage: app.InitStorage(),
 	}
 
 	return App
@@ -99,9 +116,35 @@ func (a *Application) Run() {
 	a.AppendReadyProbe().AppendHealthProbe().AppendMetrics()
 
 	done := make(chan bool)
-	go a.Router.Run(os.Getenv("HTTP_ADDR"))
+
+	srv := &http.Server{
+		Addr:    os.Getenv("HTTP_ADDR"),
+		Handler: a.Router,
+	}
+
+	go func() {
+		log.Printf("Сервер запущен на %s\n", os.Getenv("HTTP_ADDR"))
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Ошибка сервера при запуске: %v\n", err)
+		}
+	}()
+
 	isReady.Store(true)
 	<-done
+	/* Grace full shutdown*/
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Получен сигнал остановки. Завершение приложения...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Ошибка при остановке сервера: %v\n", err)
+	}
+
+	log.Println("Сервер успешно завершен")
 }
 
 func (a *Application) AppendGetEndpoint(route string, handlers ...gin.HandlerFunc) *Application {
@@ -163,13 +206,14 @@ func (a *Application) GetRequestLogger(c *gin.Context) *log.Entry {
 	return a.Log.WithField(TraceIdContextKey, c.GetString(TraceIdContextKey))
 }
 
-func initRouter(logger *log.Logger) *gin.Engine {
+func initRouter(logger *log.Logger, whiteList ...string) *gin.Engine {
 	r := gin.Default()
 	r.Use(TraceMiddleware()).
 		Use(HttpLogger(logger), gin.Recovery()).
 		Use(JsonMiddleware()).
 		Use(CorsMiddleware()).
-		Use(UserMiddleware())
+		Use(UserMiddleware()).
+		Use(HmacMiddleware(os.Getenv("HMAC_SERVER"), whiteList...))
 
 	return r
 }

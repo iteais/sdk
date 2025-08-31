@@ -15,6 +15,7 @@ import (
 	"testing"
 )
 
+//goland:noinspection ALL
 func Test_applyFilter(t *testing.T) {
 	tests := []struct {
 		name        string
