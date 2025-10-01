@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-
 // SplitAndTrim splits a string by sep and trims whitespace from each element.
 func SplitAndTrim(s, sep string) []string {
 	parts := []string{}
@@ -54,7 +53,7 @@ func GetById() gin.HandlerFunc {
 		if fields != "" {
 			// Split fields by comma and validate each
 			validFields := []string{}
-			for _, f := range pkg.SplitAndTrim(fields, ",") {
+			for _, f := range SplitAndTrim(fields, ",") {
 				if allowedColumns[f] {
 					validFields = append(validFields, f)
 				}
