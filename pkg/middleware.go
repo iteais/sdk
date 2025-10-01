@@ -105,7 +105,7 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 		resp := InternalFetch(InternalFetchConfig{
 			Method:  "GET",
 			Url:     checkHost + "/api/byKey/" + key,
-			JWT:     c.GetString("Authorization"),
+			JWT:     c.Request.Header.Get("Authorization"),
 			TraceId: c.GetString(TraceIdContextKey),
 		})
 
