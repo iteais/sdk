@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin/render"
 	"github.com/iteais/sdk/example/models"
 	"github.com/iteais/sdk/pkg"
+	"github.com/iteais/sdk/pkg/utils"
 	"io"
 	"strings"
 )
@@ -80,7 +81,7 @@ func Proxy() gin.HandlerFunc {
 			Method:  "GET",
 			Url:     "http://localhost:8800/user/1",
 			TraceId: c.GetString(pkg.TraceIdContextKey),
-			JWT:     c.GetString("Authorization"),
+			JWT:     c.GetString(utils.AuthHeader),
 		})
 
 		body, err := io.ReadAll(resp.Body)

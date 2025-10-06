@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/iteais/sdk/pkg/models"
+	"github.com/iteais/sdk/pkg/utils"
 	"io"
 	"math"
 	"net/http"
@@ -74,7 +75,7 @@ func InternalFetch(config InternalFetchConfig) *http.Response {
 	req.Header.Set(TraceIdHttpHeader, config.TraceId)
 
 	if config.JWT != "" {
-		req.Header.Set("Authorization", config.JWT)
+		req.Header.Set(utils.AuthHeader, config.JWT)
 	}
 
 	resp, err := client.Do(req)

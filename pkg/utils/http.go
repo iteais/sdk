@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+const AuthHeader = "User-Jwt"
+
 // LocalIps возвращает список локальных IP-адресов
 func LocalIps() iter.Seq[net.IP] {
 	return func(yield func(net.IP) bool) {
@@ -52,7 +54,7 @@ func CheckIpsInSameSubnet(remoteIp string, serverIp string) bool {
 }
 
 func GetRequestJwt(c *gin.Context) (*jwt.Token, error) {
-	tokenString := c.Request.Header.Get("Authorization")
+	tokenString := c.Request.Header.Get(AuthHeader)
 
 	return jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
