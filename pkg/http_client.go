@@ -23,6 +23,38 @@ type InternalFetchConfig struct {
 	TraceId string
 }
 
+func FetchUserById(id int64, traceId string, jwt string) (models.User, error) {
+	resp := InternalFetch(InternalFetchConfig{
+		Method:  "GET",
+		Url:     fmt.Sprintf("%s/user/%d", os.Getenv("USER_SERVER"), id),
+		TraceId: traceId,
+		JWT:     jwt,
+	})
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	type RespModel struct {
+		Data  models.User `json:"data"`
+		Error error       `json:"error"`
+	}
+
+	var respModel RespModel
+	body, err := io.ReadAll(resp.Body)
+
+	if resp.StatusCode == http.StatusOK {
+		err = json.Unmarshal(body, &respModel)
+		if err != nil {
+			return models.User{}, err
+
+		}
+		return respModel.Data, err
+	}
+
+	return models.User{}, errors.New("Event microservice status code: " + resp.Status)
+}
+
 func FetchEventById(id int64, traceId string, jwt string) (models.Event, error) {
 	resp := InternalFetch(InternalFetchConfig{
 		Method:  "GET",
