@@ -245,3 +245,31 @@ func CreateAction[T interface{}]() func(*gin.Context) {
 		return
 	}
 }
+
+func GetByField[T interface{}](filterFiled string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		id := c.Param("id")
+		fields := c.Query("fields")
+
+		api := new(T)
+		query := App.Db.NewSelect().
+			Model(api).
+			Where("? = ?", bun.Ident(filterFiled), id)
+
+		if fields != "" {
+			query = query.ColumnExpr(fields)
+		}
+
+		App.GetRequestLogger(c).Info(query.String())
+
+		count, err := query.ScanAndCount(c)
+
+		if count < 1 {
+			c.JSON(http.StatusNotFound, gin.H{})
+			return
+		}
+
+		c.JSON(200, gin.H{"data": api, "error": err, "cnt": count})
+	}
+}
