@@ -11,5 +11,11 @@ type Event struct {
 	StartTime string `json:"start_time"`
 	EndTime   string `json:"end_time"`
 
-	Site string `json:"site"`
+	Site          string `json:"site"`
+	PreviewImg    string `json:"preview_img"`
+	DetailImg     string `json:"detail_img"`
+	VisibleOnMain bool   `json:"visible_on_main"`
+	DefaultRoleId bool   `json:"default_role_id"`
+	CreatedBy     string `json:"created_by"`
+	SendRegEmail  bool   `json:"send_reg_email"`
 }
