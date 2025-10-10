@@ -55,6 +55,9 @@ func CallModelFunc(model interface{}, methodName string, args ...interface{}) {
 }
 
 // GetModelFields returns a set of allowed field names for the model type T.
+// It uses reflection to get the field names from the model struct.
+// If the model is a pointer, it dereferences it to get the actual struct type.
+// <b>Attention</b> it supports only the bun tag to get the column name for each field.
 func GetModelFields[T any]() map[string]struct{} {
 	var allowed = make(map[string]struct{})
 	var t T
@@ -75,6 +78,26 @@ func GetModelFields[T any]() map[string]struct{} {
 				col = strings.Split(col, ",")[0]
 			}
 			allowed[col] = struct{}{}
+		}
+	}
+	return allowed
+}
+
+// GetAllProps returns a set of allowed field names for the model type T.
+func GetAllProps[T any]() []string {
+	var allowed = make([]string, 0)
+	var t T
+	typ := reflect.TypeOf(t)
+	// If T is a pointer, get the element type
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+	if typ.Kind() == reflect.Struct {
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+
+			allowed = append(allowed, field.Name)
+
 		}
 	}
 	return allowed
