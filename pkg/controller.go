@@ -256,9 +256,8 @@ func GetByField[T interface{}](filterFiled string) gin.HandlerFunc {
 			Model(api).
 			Where("? = ?", bun.Ident(filterFiled), id)
 
-		allowedColumns := []string{
-			"id", "name", "created_at", "updated_at", // <-- example, replace with actual model fields!
-		}
+		allowedColumns := models.GetAllProps[api]()
+
 		var safeColumns []string
 		if fields != "" {
 			// Split by comma, trim whitespace, validate against allowedColumns
