@@ -201,8 +201,7 @@ func UpdateAction[T interface{}](pk string) func(*gin.Context) {
 
 		q := App.Db.NewUpdate().
 			Model(newModel).
-			Where("? = ?", bun.Ident(pk), id).
-			OmitZero()
+			Where("? = ?", bun.Ident(pk), id)
 
 		_, err = q.Exec(c)
 
