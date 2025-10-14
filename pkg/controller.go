@@ -256,8 +256,24 @@ func GetByField[T interface{}](filterFiled string) gin.HandlerFunc {
 			Model(api).
 			Where("? = ?", bun.Ident(filterFiled), id)
 
+		allowedColumns := models.GetAllProps[api]()
+
+		var safeColumns []string
 		if fields != "" {
-			query = query.ColumnExpr(fields)
+			// Split by comma, trim whitespace, validate against allowedColumns
+			requested := strings.Split(fields, ",")
+			for _, col := range requested {
+				col = strings.TrimSpace(col)
+				for _, allowed := range allowedColumns {
+					if col == allowed {
+						safeColumns = append(safeColumns, col)
+						break
+					}
+				}
+			}
+			if len(safeColumns) > 0 {
+				query = query.Column(safeColumns...)
+			}
 		}
 
 		App.GetRequestLogger(c).Info(query.String())
