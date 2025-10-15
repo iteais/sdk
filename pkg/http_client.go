@@ -24,12 +24,25 @@ type InternalFetchConfig struct {
 }
 
 func FetchUserById(id int64, traceId string, jwt string) (models.User, error) {
-	resp := InternalFetch(InternalFetchConfig{
+	return fetchUser(InternalFetchConfig{
 		Method:  "GET",
 		Url:     fmt.Sprintf("%s/user/%d", os.Getenv("USER_SERVER"), id),
 		TraceId: traceId,
 		JWT:     jwt,
 	})
+}
+
+func FetchUserByPublicId(id int64, traceId string, jwt string) (models.User, error) {
+	return fetchUser(InternalFetchConfig{
+		Method:  "GET",
+		Url:     fmt.Sprintf("%s/user/byId/%d", os.Getenv("USER_SERVER"), id),
+		TraceId: traceId,
+		JWT:     jwt,
+	})
+}
+
+func fetchUser(config InternalFetchConfig) (models.User, error) {
+	resp := InternalFetch(config)
 
 	defer func() {
 		_ = resp.Body.Close()
