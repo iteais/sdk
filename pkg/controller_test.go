@@ -86,7 +86,7 @@ type MockModel struct {
 	Id            int64 `bun:"id,pk,autoincrement" json:"id"`
 }
 
-func (t *MockModel) ByIds(value string, query *bun.SelectQuery) {
+func (t *MockModel) ByIds(value string, query *bun.SelectQuery, _ *gin.Context) {
 	ids := strings.Split(value, ",")
 
 	int64Slice := make([]int64, 0, len(ids))
