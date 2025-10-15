@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/iteais/sdk/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/sqliteshim"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -99,4 +101,48 @@ func (t *MockModel) ByIds(value string, query *bun.SelectQuery, _ *gin.Context) 
 	}
 
 	query = query.Where("id IN (?)", bun.In(int64Slice))
+}
+
+type TestModel struct {
+	ID string `bun:"id,pk"`
+}
+
+func (m *TestModel) ByName(value string, query *bun.SelectQuery, c *gin.Context) {
+	query.Where("name = ?", value)
+}
+
+func (m *TestModel) CommonListFilter(c *gin.Context, query *bun.SelectQuery) {
+	query.Where("status = 'active'")
+}
+
+func (m *TestModel) LastModifiedField() string {
+	return "updated_at"
+}
+
+func TestApplyFilter(t *testing.T) {
+	model := &TestModel{}
+	structValue := reflect.ValueOf(model)
+
+	filter := map[string]string{"name": "test"}
+
+	for key, value := range filter {
+		if key == "" || value == "" {
+			continue
+		}
+
+		methodName := "By" + utils.ToUpperCamelCase(key)
+		method := structValue.MethodByName(methodName)
+
+		if method.IsValid() {
+			args := []reflect.Value{reflect.ValueOf(value), reflect.ValueOf(&bun.SelectQuery{}), reflect.ValueOf(&gin.Context{})}
+			method.Call(args)
+		}
+
+		additionalFilter := structValue.MethodByName("CommonListFilter")
+
+		if additionalFilter.IsValid() {
+			args := []reflect.Value{reflect.ValueOf(&gin.Context{}), reflect.ValueOf(&bun.SelectQuery{})}
+			additionalFilter.Call(args)
+		}
+	}
 }
