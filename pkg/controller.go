@@ -158,7 +158,7 @@ func ApplyFilter[T interface{}](c *gin.Context, query *bun.SelectQuery) {
 		method := structValue.MethodByName(methodName)
 
 		if method.IsValid() != false {
-			args := []reflect.Value{reflect.ValueOf(value), reflect.ValueOf(query)}
+			args := []reflect.Value{reflect.ValueOf(value), reflect.ValueOf(query), reflect.ValueOf(c)}
 			method.Call(args)
 		}
 
