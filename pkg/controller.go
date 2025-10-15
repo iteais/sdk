@@ -252,11 +252,11 @@ func GetByField[T interface{}](filterFiled string) gin.HandlerFunc {
 		fields := c.Query("fields")
 
 		api := new(T)
+		allowedColumns := models.GetAllProps(api)
+
 		query := App.Db.NewSelect().
 			Model(api).
 			Where("? = ?", bun.Ident(filterFiled), id)
-
-		allowedColumns := models.GetAllProps[api]()
 
 		var safeColumns []string
 		if fields != "" {

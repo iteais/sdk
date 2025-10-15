@@ -84,9 +84,9 @@ func GetModelFields[T any]() map[string]struct{} {
 }
 
 // GetAllProps returns a set of allowed field names for the model type T.
-func GetAllProps[T any]() []string {
+func GetAllProps(t any) []string {
 	var allowed = make([]string, 0)
-	var t T
+	//var t T
 	typ := reflect.TypeOf(t)
 	// If T is a pointer, get the element type
 	if typ.Kind() == reflect.Ptr {
