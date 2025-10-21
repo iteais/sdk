@@ -1,11 +1,14 @@
 package utils
 
-import "testing"
+import (
+	"net"
+	"testing"
+)
 
 func TestCheckIpsInSameSubnet(t *testing.T) {
 	type args struct {
-		clientIP string
-		serverIP string
+		clientIP net.IP
+		serverIP net.IP
 	}
 	tests := []struct {
 		name string
@@ -15,16 +18,16 @@ func TestCheckIpsInSameSubnet(t *testing.T) {
 		{
 			name: "ips_in_same_subnet_false",
 			args: args{
-				clientIP: "89.0.142.86",
-				serverIP: "244.178.44.111",
+				clientIP: net.ParseIP("89.0.142.86"),
+				serverIP: net.ParseIP("244.178.44.111"),
 			},
 			want: false,
 		},
 		{
 			name: "ips_in_same_subnet_true",
 			args: args{
-				clientIP: "89.0.142.86",
-				serverIP: "89.0.142.87",
+				clientIP: net.ParseIP("89.0.142.86"),
+				serverIP: net.ParseIP("89.0.142.87"),
 			},
 			want: true,
 		},

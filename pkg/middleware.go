@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -77,8 +78,10 @@ func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 			return
 		}
 
-		for localIp := range utils.LocalIps() {
-			if utils.CheckIpsInSameSubnet(c.ClientIP(), localIp.String()) {
+		localIps := utils.LocalIps()
+		clientIp := net.ParseIP(c.ClientIP())
+		for localIp := range localIps {
+			if utils.CheckIpsInSameSubnet(clientIp, localIps[localIp]) {
 				c.Next()
 				return
 			}

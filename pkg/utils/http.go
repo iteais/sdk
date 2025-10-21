@@ -3,7 +3,6 @@ package utils
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"iter"
 	"net"
 	"os"
 )
@@ -11,36 +10,27 @@ import (
 const AuthHeader = "User-Jwt"
 
 // LocalIps возвращает список локальных IP-адресов
-func LocalIps() iter.Seq[net.IP] {
-	return func(yield func(net.IP) bool) {
-		addrs, _ := net.InterfaceAddrs()
-		for _, address := range addrs {
-			// check if the address is a loopback or multicast address
-			if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
-				if ipnet.IP.IsLoopback() {
-					continue
-				}
+func LocalIps() []net.IP {
 
-				yield(ipnet.IP)
+	retAddrs := make([]net.IP, 0)
+
+	addrs, _ := net.InterfaceAddrs()
+	for _, address := range addrs {
+		// check if the address is a loopback or multicast address
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			if ipnet.IP.IsLoopback() {
+				continue
 			}
+
+			retAddrs = append(retAddrs, ipnet.IP)
 		}
 	}
+
+	return retAddrs
 }
 
 // CheckIpsInSameSubnet Проверка вхождения подсети
-func CheckIpsInSameSubnet(remoteIp string, serverIp string) bool {
-
-	if remoteIp == "" || serverIp == "" {
-		return false
-	}
-
-	if remoteIp == serverIp {
-		return true
-	}
-
-	ip1IP := net.ParseIP(remoteIp)
-	ip2IP := net.ParseIP(serverIp)
-
+func CheckIpsInSameSubnet(ip1IP net.IP, ip2IP net.IP) bool {
 	if ip1IP == nil || ip2IP == nil {
 		return false
 	}
