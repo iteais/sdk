@@ -101,6 +101,7 @@ func FetchEventById(id int64, traceId string, jwt string) (models.Event, error) 
 }
 
 func InternalFetch(config InternalFetchConfig) *http.Response {
+	App.Log.Info("Internal fetching " + config.Method + " " + config.Url)
 	client := &http.Client{
 		Transport: NewRetryableTransport(nil, 3, 1*time.Second, config.TraceId), // 3 retries, 1s initial delay
 		Timeout:   10 * time.Second,                                             // Set a timeout for the request
