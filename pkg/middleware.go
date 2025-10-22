@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"time"
 
@@ -70,6 +71,11 @@ type hmacResponse struct {
 // HmacMiddleware Проверка подписи запроса
 func HmacMiddleware(checkHost string, whiteList ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		if slices.Contains(whiteList, "*") {
+			c.Next()
+			return
+		}
 
 		clientIP := c.ClientIP()
 
