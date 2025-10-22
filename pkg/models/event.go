@@ -16,6 +16,6 @@ type Event struct {
 	DetailImg     string `json:"detail_img"`
 	VisibleOnMain bool   `json:"visible_on_main"`
 	DefaultRoleId int    `json:"default_role_id"`
-	CreatedBy     string `json:"created_by"`
+	CreatedBy     int    `json:"created_by"`
 	SendRegEmail  bool   `json:"send_reg_email"`
 }
