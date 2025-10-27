@@ -3,7 +3,7 @@ module github.com/iteais/sdk
 go 1.24.4
 
 require (
-	github.com/getsentry/sentry-go v0.36.0
+	github.com/getsentry/sentry-go v0.36.1
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/go-redis/cache/v9 v9.0.0
