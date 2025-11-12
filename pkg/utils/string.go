@@ -52,3 +52,12 @@ func ToUpperCamelCase(s string) string {
 	}
 	return string(result)
 }
+
+func Ucfirst(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	r := []rune(s) // Convert string to a slice of runes to handle Unicode characters correctly
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
+}
