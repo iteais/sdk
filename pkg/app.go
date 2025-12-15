@@ -18,7 +18,6 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/iteais/sdk/pkg/app"
 	"github.com/minio/minio-go/v7"
-	"github.com/oiime/logrusbun"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"github.com/swaggo/files"
@@ -89,7 +88,6 @@ func NewApplication(config ApplicationConfig) *Application {
 
 	dbConn := app.InitDb()
 	app.DbMigrate(config.MigrationPath, config.DbSchemaName)
-	dbConn.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: logger}))
 
 	if config.WhiteList == nil {
 		config.WhiteList = []string{}
