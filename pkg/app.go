@@ -133,6 +133,7 @@ func (a *Application) Run() {
 	<-done
 	/* Grace full shutdown*/
 	quit := make(chan os.Signal, 1)
+	isReady.Store(false)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Получен сигнал остановки. Завершение приложения...")
